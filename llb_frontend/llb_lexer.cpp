@@ -113,11 +113,14 @@ char lexer_t::next( ) {
     case ('\0'):
         return *stream_;
 
-    case ('\n'):
-        tokens_.push( token_t( tok_eol ) );
+    case ('\n') :
+        tokens_.push(new_token(tok_eol));
+        line_table_.push_back(stream_ + 1);
         line_++;
+        column_ = 0;
 
     default:
+        column_++;
         return *(stream_++);
     }
 }
@@ -169,7 +172,7 @@ void lexer_t::eat_alpha( ) {
     std::string str( start, end );
     assert( str.size() > 0 );
 
-    token_t token( identify_alpha( str ) );
+    token_t token = new_token( identify_alpha( str ) );
     token.value_.string_ = str;
     tokens_.push( token );
 }
@@ -225,7 +228,7 @@ void lexer_t::eat_number( ) {
     }
     else {
 
-        token_t tok(tok_lit_float);
+        token_t tok = new_token(tok_lit_float);
         tok.value_.float_ = float(double(num) / double(div));
         tokens_.push(tok);
     }
@@ -250,7 +253,7 @@ void lexer_t::eat_string( ) {
     if (start == end)
         throw exception_t("error parsing string literal");
 
-    token_t tok(tok_lit_string);
+    token_t tok = new_token(tok_lit_string);
     tok.value_.string_.assign(start, end);
     tokens_.push( tok );
 }
@@ -272,7 +275,7 @@ bool lexer_t::eat_special( ) {
 
         const char * str = specials[i].str_;
         if ( found(str) ) {
-            tokens_.push( token_t( specials[i].type_ ));
+            tokens_.push(new_token(specials[i].type_));
             return true;
         }
     }
@@ -286,6 +289,9 @@ void lexer_t::eat_comment() {
 }
 
 bool lexer_t::run( exception_t & error ) {
+
+    line_table_.clear();
+    line_table_.push_back(stream_);
 
     try {
 
@@ -329,12 +335,19 @@ bool lexer_t::run( exception_t & error ) {
             throw exception_t("unexpected charactor");
         }
 
-        tokens_.push( token_t(tok_eol));
-        tokens_.push( token_t(tok_eof));
+        tokens_.push(new_token(tok_eol));
+        tokens_.push(new_token(tok_eof));
     }
     catch ( exception_t thrown ) {
         error = thrown;
         return false;
     }
     return true;
+}
+
+std::string lexer_t::get_line(uint32_t line) {
+
+    if (line_table_.size() < line)
+        return std::string();
+    return line_table_[line];
 }

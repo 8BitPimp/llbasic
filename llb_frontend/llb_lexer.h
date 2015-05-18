@@ -12,6 +12,9 @@ protected:
     uint32_t size_;
     token_list_t & tokens_;
     uint32_t line_;
+    uint32_t column_;
+
+    std::vector<const char*> line_table_;
 
     char next( );
 
@@ -43,6 +46,13 @@ protected:
     bool eat_special( );
     void eat_comment( );
 
+    token_t new_token(token_type_t type) {
+        token_t tok(type);
+        tok.line_ = line_;
+        tok.column_ = column_;
+        return tok;
+    }
+
 public:
 
     lexer_t( const char * stream,
@@ -54,6 +64,8 @@ public:
         , line_( 0 )
     {
     }
+
+    std::string get_line(uint32_t line);
 
     bool run( struct exception_t & );
 };

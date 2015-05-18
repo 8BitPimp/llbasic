@@ -38,6 +38,30 @@ void emit_new_line() {
     printf("\n");
 }
 
+void emit_function_proto( pt_decl_function_t & n ) {
+
+    emit_datatype(n.ret_type_.type_);
+    emit_token_string(n.name_);
+    printf("(");
+
+    bool first = true;
+
+    for (auto & i : n.args_) {
+
+        if (!first)
+            printf(", ");
+        first = false;
+
+        pt_decl_var_t * arg = i->upcast<pt_decl_var_t>();
+        if (arg == nullptr)
+            throw exception_t("internal error");
+        emit_datatype(arg->type_.type_);
+        emit_token_string(arg->name_);
+    }
+
+    printf(")");
+}
+
 void llb_backend_cpp_t::visit(pt_module_t & n) {
     pt_walker_t::visit(n);
 }
@@ -52,20 +76,9 @@ void llb_backend_cpp_t::visit(pt_identifier_t & n) {
 
 void llb_backend_cpp_t::visit(pt_decl_function_t & n) {
 
-    emit_datatype(n.ret_type_.type_);
-    emit_token_string(n.name_);
-    printf("(");
-
-    for (auto & i : n.args_) {
-
-        
-    }
-
-    printf(") {");
+    emit_function_proto(n);
+    printf(";");
     emit_new_line();
-    printf("}");
-    emit_new_line();
-
     pt_walker_t::visit(n);
 }
 

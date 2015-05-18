@@ -79,10 +79,43 @@ struct token_t {
 
     token_t( token_type_t type )
         : type_( type )
+        , line_( 0 )
+        , column_( 0 )
     {
     }
 
     token_type_t type_;
+
+    const std::string & get_string() {
+        switch (type_) {
+        case (tok_lit_string):
+        case (tok_identifier):
+            break;
+        default:
+            throw exception_t("internal error");
+        }
+        return value_.string_;
+    }
+
+    const int get_int() {
+        switch (type_) {
+        case (tok_lit_integer):
+            break;
+        default:
+            throw exception_t("internal error");
+        }
+        return value_.int_;
+    }
+
+    const float get_float() {
+        switch (type_) {
+        case (tok_lit_float):
+            break;
+        default:
+            throw exception_t("internal error");
+        }
+        return value_.float_;
+    }
 
     struct value_t {
 
@@ -99,6 +132,8 @@ struct token_t {
 
     } value_;
 
+    uint32_t line_;
+    uint32_t column_;
 };
 
 class token_list_t {
