@@ -9,7 +9,7 @@ test_t tests[] = {
 test_t::e_stage_pt,
 test_t::e_expect_pass,
 R"(
-function name()
+function name:none()
 end
 )",
 [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
@@ -29,7 +29,7 @@ end
 test_t::e_stage_pt,
 test_t::e_expect_pass,
 R"(
-function name( a1.int )
+function name:int( a1:int )
 end
 )",
 [](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
@@ -40,7 +40,7 @@ end
 test_t::e_stage_pt,
 test_t::e_expect_pass,
 R"(
-function name( a1.int, a2.int )
+function name:int( a1:int, a2:int )
 end
 )",
 [](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
@@ -51,7 +51,7 @@ end
 test_t::e_stage_pt,
 test_t::e_expect_parse_fail,
 R"(
-function name( a1.int, a1.int )
+function name:string( a1:int, a1:int )
 end
 )",
 [](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
