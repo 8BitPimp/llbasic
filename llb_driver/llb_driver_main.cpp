@@ -13,15 +13,15 @@
 #include "llb_pass_printer.h"
 
 const char source1[] = R"(
-global x.int = 3 + 4
-function main.int( x.int, y.int )
-    local x.int = 3
+global x:int = 3 + 4
+function main:int( x:int, y:int )
+    local x:int = 3
     x = x * 3 + 2 * 4
     return x + 3
 end
-global l2.int=3+2, i3.float, i4.float=12*3
-function y.int( )
-    local x.int=3, y.float=5
+global l2:int=3+2, i3:float, i4:float=12*3
+function y:int( )
+    local x:int=3, y:float=5
 end
 )";
 

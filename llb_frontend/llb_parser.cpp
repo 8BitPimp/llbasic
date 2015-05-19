@@ -3,6 +3,11 @@
 #include "llb_token.h"
 #include "llb_pt.h"
 
+namespace {
+
+    const token_type_t type_prefix = tok_chr_colon;
+}
+
 void parser_t::parse_stmt_return() {
 
     token_t tok = list_.pop(tok_key_return);
@@ -168,7 +173,7 @@ void parser_t::parse_function() {
 
     list_.pop( tok_key_function );
     token_t name = list_.pop( tok_identifier );
-    list_.pop(tok_chr_dot);
+    list_.pop( type_prefix );
     token_t type = list_.pop(tok_identifier);
     list_.pop( tok_chr_paren_l );
 
@@ -179,7 +184,7 @@ void parser_t::parse_function() {
 
         do {
             token_t name = list_.pop( tok_identifier );
-            list_.pop( tok_chr_dot );
+            list_.pop( type_prefix );
             token_t type = list_.pop();
             pt_.push( new pt_decl_var_t( pt_decl_var_t::e_arg, name, type, shared_pt_node_t() ) );
             ptr_func->add_arg( pt_.pop() );
@@ -216,7 +221,7 @@ void parser_t::parse_var_decl() {
 
     do {
         token_t name = list_.pop( tok_identifier );
-        list_.pop(tok_chr_dot);
+        list_.pop(type_prefix);
         token_t type = list_.pop( tok_identifier );
         shared_pt_node_t expr;
 
