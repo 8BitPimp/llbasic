@@ -14,3 +14,5 @@ file(GLOB HEADER_FILES *.h)
 
 add_library(llb_frontend ${SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(llb_frontend PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories("../llb_util")
+

@@ -7,7 +7,7 @@ test_t tests[] = {
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
         "identifier \t\n ident",
-        [](exception_t&e, token_list_t&tl, pt_t&pt) {
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 tl.pop(tok_identifier);
                 tl.pop(tok_eol);
@@ -15,7 +15,7 @@ test_t tests[] = {
                 tl.pop(tok_eol);
                 tl.pop(tok_eof);
             }
-            catch (exception_t &) {
+            catch (llb_fail_t &) {
                 return false;
             }
             return true;
@@ -26,13 +26,13 @@ test_t tests[] = {
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
         "1337 ",
-        [](exception_t&e, token_list_t&tl, pt_t&pt) {
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t = tl.pop(tok_lit_integer);
                 if (t.value_.int_ != 1337)
                     return false;
             }
-            catch (exception_t &) {
+            catch (llb_fail_t &) {
                 return false;
             }
             return true;
@@ -43,13 +43,13 @@ test_t tests[] = {
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
         "3.14 ",
-        [](exception_t&e, token_list_t&tl, pt_t&pt) {
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t = tl.pop(tok_lit_float);
                 if (!floats_equal( t.value_.float_, 3.14f))
                     return false;
             }
-            catch (exception_t &) {
+            catch (llb_fail_t &) {
                 return false;
             }
             return true;
@@ -60,13 +60,13 @@ test_t tests[] = {
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
         "0xcafe12 ",
-        [](exception_t&e, token_list_t&tl, pt_t&pt) {
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t = tl.pop(tok_lit_integer);
                 if (t.value_.int_ != 0xcafe12)
                     return false;
             }
-            catch (exception_t &) {
+            catch (llb_fail_t &) {
                 return false;
             }
             return true;
@@ -77,13 +77,13 @@ test_t tests[] = {
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
         "0b0101 ",
-        [](exception_t&e, token_list_t&tl, pt_t&pt) {
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t = tl.pop(tok_lit_integer);
                 if (t.value_.int_ != 5)
                     return false;
             }
-            catch (exception_t &) {
+            catch (llb_fail_t &) {
                 return false;
             }
             return true;
@@ -94,7 +94,7 @@ test_t tests[] = {
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
         "\"hello world\" ",
-        [](exception_t&e, token_list_t&tl, pt_t&pt) {
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t = tl.pop(tok_lit_string);
                 if (t.value_.string_.empty())
@@ -102,7 +102,7 @@ test_t tests[] = {
                 if (t.value_.string_ != "hello world")
                     return false;
             }
-            catch (exception_t &) {
+            catch (llb_fail_t &) {
                 return false;
             }
             return true;
@@ -113,7 +113,7 @@ test_t tests[] = {
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
         "1234 0x1234 0b111 99.12 0 0.0 \"greets\" ",
-        [](exception_t&e, token_list_t&tl, pt_t&pt) {
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t0 = tl.pop(tok_lit_integer);
                 if (t0.value_.int_ != 1234) return false;
@@ -137,7 +137,7 @@ test_t tests[] = {
                 if (t6.value_.string_ != "greets") return false;
                 
             }
-            catch (exception_t &) {
+            catch (llb_fail_t &) {
                 return false;
             }
             return true;
@@ -148,7 +148,7 @@ test_t tests[] = {
         test_t::e_stage_lexer,
         test_t::e_expect_lexer_fail,
         "0.12.34 ",
-        [](exception_t&e, token_list_t&tl, pt_t&pt) {
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             return true;
         }
     },
@@ -157,7 +157,7 @@ test_t tests[] = {
         test_t::e_stage_lexer,
         test_t::e_expect_lexer_fail,
         "0x12.34 ",
-        [](exception_t&e, token_list_t&tl, pt_t&pt) {
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             return true;
         }
     },
@@ -166,7 +166,7 @@ test_t tests[] = {
         test_t::e_stage_lexer,
         test_t::e_expect_lexer_fail,
         "\"multi line\n string\n",
-        [](exception_t&e, token_list_t&tl, pt_t&pt) {
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             return true;
         }
     }

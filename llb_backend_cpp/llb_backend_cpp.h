@@ -20,7 +20,9 @@ public:
     virtual void visit(pt_return_t & n);
     virtual void visit(pt_break_t & n);
     virtual void visit(pt_continue_t & n);
+#if 0
     virtual void visit(pt_assign_t & n);
+#endif
     virtual void visit(pt_call_t & n);
     virtual void visit(pt_expr_t & n);
 };

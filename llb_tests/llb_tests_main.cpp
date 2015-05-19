@@ -18,7 +18,7 @@ extern void glob_test_function(test_list_t&list);
 
 bool run_test( test_t & test ) {
 
-    exception_t except;
+    llb_fail_t except;
     token_list_t tokens;
     pt_t parse_tree;
 

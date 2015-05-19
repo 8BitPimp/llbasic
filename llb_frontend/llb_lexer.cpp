@@ -64,9 +64,10 @@ namespace {
         "!=",  tok_op_nequ,
 
         ".",   tok_chr_dot,
+        ":",   tok_chr_colon,
         "(",   tok_chr_paren_l,
         ")",   tok_chr_paren_r,
-        "=",   tok_chr_equal,
+        "=",   tok_chr_assign,
         ",",   tok_chr_comma,
 
         "and", tok_op_and,
@@ -80,12 +81,14 @@ namespace {
         "global",   tok_key_global,
         "local",    tok_key_local,
 
+#if 0
         "none",     tok_key_none,
         "bool",     tok_key_bool,
         "int",      tok_key_int,
         "float",    tok_key_float,
         "string",   tok_key_string,
         "func",     tok_key_func,
+#endif
 
         "type",     tok_key_type,
         "function", tok_key_function,
@@ -102,6 +105,7 @@ namespace {
         "continue", tok_key_continue,
         "return",   tok_key_return,
         "leave",    tok_key_leave,
+        "new",      tok_key_new,
 
         nullptr, tok_empty
     };
@@ -167,7 +171,7 @@ void lexer_t::eat_alpha( ) {
     const char * end = stream_;
 
     if ( start == end )
-        throw exception_t("zero length alpha");
+        fail("zero length alpha");
 
     std::string str( start, end );
     assert( str.size() > 0 );
@@ -200,10 +204,8 @@ void lexer_t::eat_number( ) {
         
         if (peek() == '.') {
 
-            if (base != 10)
-                throw exception_t("malaformed literal");
-            if (div > 0)
-                throw exception_t("malaformed literal");
+            if ((base != 10) || (div > 0))
+                fail("malformed literal");
             div = 1;
             next();
         }
@@ -230,6 +232,8 @@ void lexer_t::eat_number( ) {
 
         token_t tok = new_token(tok_lit_float);
         tok.value_.float_ = float(double(num) / double(div));
+        tok.line_ = line_;
+        tok.column_ = column_;
         tokens_.push(tok);
     }
 }
@@ -244,14 +248,14 @@ void lexer_t::eat_string( ) {
     while (!at_eof()) {
         char ch = next();
         if (ch == '\n')
-            throw exception_t("string not terminated");
+            fail("string not terminated");
         if (ch == '\"')
             break;
         end = stream_;
     }
 
     if (start == end)
-        throw exception_t("error parsing string literal");
+        fail("error parsing string literal");
 
     token_t tok = new_token(tok_lit_string);
     tok.value_.string_.assign(start, end);
@@ -288,7 +292,7 @@ void lexer_t::eat_comment() {
             break;
 }
 
-bool lexer_t::run( exception_t & error ) {
+bool lexer_t::run(llb_fail_t & error) {
 
     line_table_.clear();
     line_table_.push_back(stream_);
@@ -332,22 +336,35 @@ bool lexer_t::run( exception_t & error ) {
             if (eat_special())
                 continue;
 
-            throw exception_t("unexpected charactor");
+            fail("unexpected charactor");
         }
 
         tokens_.push(new_token(tok_eol));
         tokens_.push(new_token(tok_eof));
     }
-    catch ( exception_t thrown ) {
+    catch (llb_fail_t thrown) {
         error = thrown;
         return false;
     }
     return true;
 }
 
-std::string lexer_t::get_line(uint32_t line) {
+std::string lexer_t::get_line(uint32_t line) const {
 
     if (line_table_.size() < line)
         return std::string();
-    return line_table_[line];
+
+    const char * start = line_table_[line];
+    const char * end = start;
+
+    while (true) {
+        if (end[0] == '\0') break;
+        if (end[0] == '\n') break;
+        end++;
+    }
+
+    if (start == end)
+        return std::string();
+
+    return std::string(start, end);
 }

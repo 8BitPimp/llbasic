@@ -51,18 +51,25 @@ namespace {
     int32_t precedence(token_type_t type) {
 
         switch (type) {
+
+            case (tok_chr_dot) :
+                return 0;
+
+            case (tok_chr_assign) :
+                return 1;
+
             case (tok_op_add):
             case (tok_op_sub):
-                return 0;
+                return 2;
 
             case (tok_op_mul):
             case (tok_op_div):
             case (tok_op_mod):
-                return 1;
+                return 3;
 
             case (tok_op_shl):
             case (tok_op_shr):
-                return 2;
+                return 4;
 
             case (tok_op_lt):
             case (tok_op_gt):
@@ -70,19 +77,15 @@ namespace {
             case (tok_op_nequ):
             case (tok_op_ltequ):
             case (tok_op_gtequ):
-                return 3;
+                return 5;
 
             case (tok_op_and):
             case (tok_op_or):
-                return 4;
-#if 0
-            case (tok_chr_dot):
-                return 5;
-#endif
+                return 6;
+
             default:
                 return -1;
         }
-
     }
 
     bool is_operator(token_type_t type) {
@@ -142,7 +145,7 @@ void parser_t::parse_expr_lhs( expr_info_t & expr ) {
         break;
 
     default:
-        throw exception_t("expecting expression");
+        fail("expecting expression", list_.peek(0));
     }
 
     if ( unary_op ) {
@@ -150,9 +153,12 @@ void parser_t::parse_expr_lhs( expr_info_t & expr ) {
     }
 }
 
-void parser_t::parse_expr_reduce( expr_info_t & expr, uint32_t mark ) {
+void parser_t::parse_expr_reduce( expr_info_t & expr, int32_t prec ) {
 
-    while ( expr.ops_.get_mark() > mark ) {
+    while (! expr.ops_.empty() ) {
+
+        if (precedence(expr.ops_.top().type_) < prec)
+            break;
 
         token_t op = expr.ops_.pop();
 
@@ -184,7 +190,7 @@ void parser_t::parse_expr_inner( expr_info_t & expr ) {
 
     // optional reduce
     if ( action == e_reduce )
-        parse_expr_reduce( expr, 0 );
+        parse_expr_reduce( expr, precedence(op.type_) );
 
     // always shift
     expr.ops_.push(op);

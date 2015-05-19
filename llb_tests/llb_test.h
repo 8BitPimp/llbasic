@@ -28,7 +28,7 @@ struct test_t {
 
     const char * source_;
 
-    std::function<bool(exception_t&, token_list_t&, pt_t&)> validate_;
+    std::function<bool(llb_fail_t&, token_list_t&, pt_t&)> validate_;
 
     const char * category_;
     uint32_t index_;

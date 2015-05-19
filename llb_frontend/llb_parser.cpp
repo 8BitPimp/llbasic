@@ -5,7 +5,7 @@
 
 void parser_t::parse_stmt_return() {
 
-    list_.pop(tok_key_return);
+    token_t tok = list_.pop(tok_key_return);
     shared_pt_node_t node;
 
     if (! list_.found( tok_eol ) ) {
@@ -14,7 +14,7 @@ void parser_t::parse_stmt_return() {
 
         list_.pop( tok_eol );
     }
-    pt_.push( new pt_return_t( node ) );
+    pt_.push( new pt_return_t( tok, node ) );
 }
 
 void parser_t::parse_stmt_continue() {
@@ -28,12 +28,12 @@ void parser_t::parse_stmt_break() {
 
 void parser_t::parse_stmt_while() {
 
-    list_.pop(tok_key_while);
+    token_t tok = list_.pop(tok_key_while);
     list_.pop(tok_chr_paren_l);
     parse_expr();
     list_.pop(tok_chr_paren_r);
 
-    std::unique_ptr<pt_while_t> ptr_while( new pt_while_t( pt_.pop() ) );
+    std::unique_ptr<pt_while_t> ptr_while( new pt_while_t( tok, pt_.pop() ) );
     assert( ptr_while.get() );
 
     while (! list_.found(tok_key_end)) {
@@ -53,17 +53,17 @@ void parser_t::parse_stmt_for() {
 
 void parser_t::parse_stmt_if() {
 
-    list_.pop(tok_key_if);
+    token_t tok = list_.pop(tok_key_if);
     parse_expr();
 
-    std::unique_ptr<pt_if_t> stmt_if( new pt_if_t( pt_.pop() ) );
+    std::unique_ptr<pt_if_t> stmt_if( new pt_if_t( tok, pt_.pop() ) );
 
     bool in_true_branch = true;
     while (! list_.found(tok_key_end)) {
 
         if (list_.found(tok_key_else)) {
             if (! in_true_branch )
-                throw exception_t("unexpected else");
+                fail("unexpected else", list_.previous());
             in_true_branch = false;
         }
 
@@ -94,6 +94,7 @@ void parser_t::parse_stmt_call( ) {
     pt_.push( call.release() );
 }
 
+#if 0
 void parser_t::parse_stmt_assign() {
 
     token_t name = list_.pop( tok_identifier );
@@ -104,12 +105,14 @@ void parser_t::parse_stmt_assign() {
     shared_pt_node_t expr = pt_.pop( );
     pt_.push( new pt_assign_t( name, expr ));
 }
+#endif
 
 void parser_t::parse_stmt() {
 
     switch (list_.peek(0).type_) {
     case (tok_identifier):
 
+#if 0
         switch (list_.peek(1).type_) {
         case (tok_chr_equal):
             parse_stmt_assign();
@@ -121,7 +124,11 @@ void parser_t::parse_stmt() {
 
         default:
             throw exception_t("unexpected token type");
-        }
+    }
+#else
+        parse_expr();
+        pt_.push( new pt_stmt_t( pt_.pop() ) );
+#endif
         break;
 
     case (tok_key_local):
@@ -153,7 +160,7 @@ void parser_t::parse_stmt() {
         break;
 
     default:
-        throw exception_t("unexpected token type");
+        fail("unexpected token type", list_.peek(0));
     }
 }
 
@@ -161,10 +168,8 @@ void parser_t::parse_function() {
 
     list_.pop( tok_key_function );
     token_t name = list_.pop( tok_identifier );
-    token_t type( tok_key_none );
-    if ( list_.found( tok_chr_dot ) ) {
-        type = list_.pop();
-    }
+    list_.pop(tok_chr_dot);
+    token_t type = list_.pop(tok_identifier);
     list_.pop( tok_chr_paren_l );
 
     std::unique_ptr<pt_decl_function_t> ptr_func( new pt_decl_function_t( name, type ) );
@@ -212,10 +217,10 @@ void parser_t::parse_var_decl() {
     do {
         token_t name = list_.pop( tok_identifier );
         list_.pop(tok_chr_dot);
-        token_t type = list_.pop();
+        token_t type = list_.pop( tok_identifier );
         shared_pt_node_t expr;
 
-        if (list_.found(tok_chr_equal)) {
+        if (list_.found(tok_chr_assign)) {
 
             parse_expr();
             expr = pt_.pop();
@@ -255,7 +260,7 @@ void parser_t::parse_module() {
                 break;
 
             default:
-                throw exception_t("unexpected token");
+                fail("unexpected token", tok);
         }
     }
 
@@ -263,12 +268,23 @@ void parser_t::parse_module() {
     pt_.push( module.release() );
 }
 
-bool parser_t::run(exception_t & error) {
+void parser_t::fail(std::string str, const pt_node_t & node) {
+
+    source_pos_t pos = node.get_source_pos();
+    throw llb_fail_t(str, pos.line_, pos.column_);
+}
+
+void parser_t::fail(std::string str, const token_t & tok) {
+
+    throw llb_fail_t(str, tok.line_, tok.column_);
+}
+
+bool parser_t::run(llb_fail_t & error) {
 
     try {
         parse_module();
     }
-    catch (exception_t thrown) {
+    catch (llb_fail_t thrown) {
 
         error = thrown;
         return false;

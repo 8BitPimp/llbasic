@@ -8,7 +8,7 @@ test_t tests[] = {
     test_t::e_stage_pt,
     test_t::e_expect_pass,
     "global x.int",
-    [](exception_t&e, token_list_t&tl, pt_t&pt) { return true; }
+    [](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
 }
 
 };

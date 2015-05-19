@@ -53,6 +53,10 @@ protected:
         return tok;
     }
 
+    void fail(std::string str) {
+        throw llb_fail_t(str, line_, column_);
+    }
+
 public:
 
     lexer_t( const char * stream,
@@ -65,7 +69,7 @@ public:
     {
     }
 
-    std::string get_line(uint32_t line);
+    std::string get_line(uint32_t line) const;
 
-    bool run( struct exception_t & );
+    bool run(struct llb_fail_t &);
 };

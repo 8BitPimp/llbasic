@@ -12,7 +12,7 @@ R"(
 function name()
 end
 )",
-    [](exception_t&e, token_list_t&tl, pt_t&pt) { 
+[](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
         if (!pt.top()->is_a<pt_module_t>())
             return false;
         pt_module_t * mod = pt.top()->upcast<pt_module_t>();
@@ -32,7 +32,7 @@ R"(
 function name( a1.int )
 end
 )",
-[](exception_t&e, token_list_t&tl, pt_t&pt) { return true; }
+[](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
 },
 
 // multiple arguments
@@ -43,7 +43,7 @@ R"(
 function name( a1.int, a2.int )
 end
 )",
-[](exception_t&e, token_list_t&tl, pt_t&pt) { return true; }
+[](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
 },
 
 // argument name collision
@@ -54,7 +54,7 @@ R"(
 function name( a1.int, a1.int )
 end
 )",
-[](exception_t&e, token_list_t&tl, pt_t&pt) { return true; }
+[](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
 },
 
 };

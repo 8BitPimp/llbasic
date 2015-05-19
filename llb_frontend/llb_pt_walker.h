@@ -125,12 +125,14 @@ public:
     }
 #endif
 
+#if 0
     virtual void visit( pt_assign_t & n ) {
         enter( n );
         if (n.expr_)
             n.expr_->accept(*this);
         leave();
     }
+#endif
 
     virtual void visit( pt_call_t & n ) {
         enter( n );
@@ -143,6 +145,13 @@ public:
         enter( n );
         if (n.expr_)
             n.expr_->accept(*this);
+        leave();
+    }
+
+    virtual void visit(pt_stmt_t & n) {
+        enter(n);
+        if (n.child_)
+            n.child_->accept(*this);
         leave();
     }
 };

@@ -3,8 +3,10 @@
 #include <stdint.h>
 
 // forward
+struct token_t;
 class token_list_t;
 struct expr_info_t;
+struct pt_node_t;
 class pt_t;
 
 class parser_t {
@@ -18,7 +20,7 @@ protected:
     void parse_type();
 #endif
 
-    void parse_expr_reduce( expr_info_t &, uint32_t mark );
+    void parse_expr_reduce( expr_info_t &, int32_t prec );
     void parse_expr_lhs( expr_info_t & );
     void parse_expr_inner( expr_info_t & );
     void parse_expr();
@@ -33,7 +35,13 @@ protected:
     void parse_stmt_continue();
     void parse_stmt_return();
 
+    void parse_type();
+    void parse_field();
+
     void parse_module();
+
+    void fail(std::string str, const pt_node_t & node);
+    void fail(std::string str, const token_t & tok);
 
 public:
     parser_t( token_list_t & list, pt_t & ast )
@@ -42,5 +50,5 @@ public:
     {
     }
 
-    bool run( struct exception_t & );
+    bool run(struct llb_fail_t &);
 };

@@ -77,11 +77,13 @@ void pt_pass_printer_t::visit(pt_continue_t & n) {
     pt_walker_t::visit(n);
 }
 
+#if 0
 void pt_pass_printer_t::visit(pt_assign_t & n) {
     indent();
     printf("%s\n", n.get_type().name());
     pt_walker_t::visit(n);
 }
+#endif
 
 void pt_pass_printer_t::visit(pt_call_t & n) {
     indent();
@@ -90,6 +92,12 @@ void pt_pass_printer_t::visit(pt_call_t & n) {
 }
 
 void pt_pass_printer_t::visit(pt_expr_t & n) {
+    indent();
+    printf("%s\n", n.get_type().name());
+    pt_walker_t::visit(n);
+}
+
+void pt_pass_printer_t::visit(pt_stmt_t & n) {
     indent();
     printf("%s\n", n.get_type().name());
     pt_walker_t::visit(n);

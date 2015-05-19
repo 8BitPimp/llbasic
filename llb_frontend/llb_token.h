@@ -7,73 +7,7 @@
 #include <memory>
 
 #include "llb_error.h"
-
-enum token_type_t {
-
-    tok_empty = 0,
-
-    tok_eof,
-    tok_eol,
-
-    tok_chr_dot,
-    tok_chr_comma,
-    tok_chr_equal,
-    tok_chr_paren_l,
-    tok_chr_paren_r,
-
-    tok_identifier,
-
-    tok_lit_integer,
-    tok_lit_float,
-    tok_lit_string,
-
-    tok_key_global,
-    tok_key_local,
-
-    tok_key_none,
-    tok_key_bool,
-    tok_key_int,
-    tok_key_float,
-    tok_key_string,
-    tok_key_func,
-
-    tok_key_type,
-    tok_key_function,
-    tok_key_end,
-
-    tok_key_true,
-    tok_key_false,
-
-    tok_key_if,
-    tok_key_else,
-    tok_key_while,
-    tok_key_for,
-    tok_key_break,
-    tok_key_continue,
-    tok_key_return,
-    tok_key_leave,
-
-    tok_op_lt,
-    tok_op_ltequ,
-    tok_op_gt,
-    tok_op_gtequ,
-    tok_op_equ,
-    tok_op_nequ,
-
-    tok_op_add,
-    tok_op_sub,
-    tok_op_mul,
-    tok_op_div,
-    tok_op_mod,
-    tok_op_shl,
-    tok_op_shr,
-
-    tok_op_and,
-    tok_op_or,
-
-    tok_ury_not,
-    tok_ury_neg,
-};
+#include "llb_token_types.h"
 
 struct token_t {
 
@@ -86,35 +20,39 @@ struct token_t {
 
     token_type_t type_;
 
-    const std::string & get_string() {
+    const std::string & get_string() const {
         switch (type_) {
         case (tok_lit_string):
         case (tok_identifier):
             break;
         default:
-            throw exception_t("internal error");
+            assert(!"internal error");
         }
         return value_.string_;
     }
 
-    const int get_int() {
+    const int get_int() const {
         switch (type_) {
         case (tok_lit_integer):
             break;
         default:
-            throw exception_t("internal error");
+            assert(!"internal error");
         }
         return value_.int_;
     }
 
-    const float get_float() {
+    const float get_float() const {
         switch (type_) {
         case (tok_lit_float):
             break;
         default:
-            throw exception_t("internal error");
+            assert(!"internal error");
         }
         return value_.float_;
+    }
+
+    void fail(const char * msg) {
+        throw llb_fail_t(msg, line_, column_);
     }
 
     struct value_t {
@@ -173,10 +111,13 @@ public:
         return tok;
     }
 
-    token_t & pop( token_type_t type ) {
-        if (peek(0).type_ != type)
-            throw exception_t("unexpected token");
-        return pop();
+    token_t & pop(token_type_t type);
+
+    token_t & previous() {
+        if (index_ <= 0)
+            assert(!"internal error");
+        return list_[index_ - 1];
+
     }
 
     bool found( token_type_t type ) {

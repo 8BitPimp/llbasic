@@ -1,5 +1,6 @@
 #pragma once
 
+#include "llb_source_pos.h"
 #include "llb_token.h"
 #include <memory>
 
@@ -19,7 +20,10 @@ struct pt_stmt_t;
 struct pt_decl_var_t;
 struct pt_decl_function_t;
 
+struct pt_stmt_t;
+#if 0
 struct pt_assign_t;
+#endif
 struct pt_return_t;
 struct pt_call_t;
 struct pt_if_t;
@@ -74,9 +78,12 @@ public:
     virtual void visit( pt_return_t & n ) = 0;
     virtual void visit( pt_break_t & n ) = 0;
     virtual void visit( pt_continue_t & n ) = 0;
+#if 0
     virtual void visit( pt_assign_t & n ) = 0;
+#endif
     virtual void visit( pt_call_t & n ) = 0;
     virtual void visit( pt_expr_t & n ) = 0;
+    virtual void visit( pt_stmt_t & n ) = 0;
 };
 
 struct pt_node_t {
@@ -123,6 +130,8 @@ struct pt_node_t {
             return nullptr;
         return static_cast<type_t*>( this );
     }
+
+    virtual source_pos_t get_source_pos() const = 0;
 };
 
 class pt_t {
@@ -185,6 +194,10 @@ public:
         globals_.push_back(n);
     }
 
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(0, 0);
+    }
+
     std::vector<shared_pt_node_t> functions_;
     std::vector<shared_pt_node_t> globals_;
 };
@@ -199,12 +212,16 @@ public:
     shared_pt_node_t lhs_, rhs_;
 
     pt_op_bin_t( token_t op,
-                  shared_pt_node_t lhs,
-                  shared_pt_node_t rhs )
+                 shared_pt_node_t lhs,
+                 shared_pt_node_t rhs )
         : operator_( op )
         , lhs_( lhs )
         , rhs_( rhs )
     {
+    }
+
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(operator_.line_, operator_.column_);
     }
 
     struct {
@@ -223,10 +240,14 @@ public:
     shared_pt_node_t child_;
 
     pt_op_ury_t( token_t op,
-                  shared_pt_node_t child )
+                 shared_pt_node_t child )
         : operator_( op )
         , child_( child )
     {
+    }
+
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(operator_.line_, operator_.column_);
     }
 
     struct {
@@ -248,6 +269,10 @@ public:
     {
     }
 
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(value_.line_, value_.column_);
+    }
+
     struct {
         pt_type_t type_;
     }
@@ -267,6 +292,10 @@ public:
     {
     }
 
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(name_.line_, name_.column_);
+    }
+
     struct {
 
         weak_pt_node_t decl_;
@@ -280,11 +309,18 @@ public:
     HAS_RTTI("pt_return_t");
     VISITABLE();
 
+    token_t token_;
     shared_pt_node_t expr_;
 
-    pt_return_t( shared_pt_node_t expr )
-        : expr_( expr )
+    pt_return_t( token_t tok,
+                 shared_pt_node_t expr )
+        : token_( tok )
+        , expr_( expr )
     {
+    }
+
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(token_.line_, token_.column_);
     }
 
     struct {
@@ -302,13 +338,20 @@ public:
     HAS_RTTI("pt_while_t");
     VISITABLE();
 
+    token_t token_;
     shared_pt_node_t expr_;
     std::vector<shared_pt_node_t> stmt_;
 
-    pt_while_t( shared_pt_node_t expr )
-        : expr_( expr )
+    pt_while_t( token_t tok,
+                shared_pt_node_t expr )
+        : token_( tok )
+        , expr_( expr )
         , stmt_( )
     {
+    }
+
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(token_.line_, token_.column_);
     }
 
     void add_stmt( shared_pt_node_t node ) {
@@ -328,12 +371,16 @@ public:
     std::vector<shared_pt_node_t> stmt_;
 
     pt_decl_function_t( token_t name,
-                         token_t ret_type )
+                        token_t ret_type )
         : name_( name )
         , ret_type_( ret_type )
         , args_( )
         , stmt_( )
     {
+    }
+
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(name_.line_, name_.column_);
     }
 
     void add_arg( shared_pt_node_t node ) {
@@ -352,6 +399,7 @@ public:
     ext_;
 };
 
+#if 0
 struct pt_assign_t
     : public pt_node_t {
 public:
@@ -362,7 +410,7 @@ public:
     shared_pt_node_t expr_;
 
     pt_assign_t( token_t name,
-                  shared_pt_node_t expr )
+                 shared_pt_node_t expr )
         : name_( name )
         , expr_( expr )
     {
@@ -374,6 +422,7 @@ public:
     }
     ext_;
 };
+#endif
 
 struct pt_call_t
     : public pt_node_t {
@@ -389,6 +438,10 @@ public:
         , arg_()
     {
     };
+
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(name_.line_, name_.column_);
+    }
 
     void add_arg( shared_pt_node_t node ) {
         arg_.push_back( node );
@@ -407,15 +460,21 @@ public:
     HAS_RTTI("pt_if_t");
     VISITABLE();
 
+    token_t token_;
     shared_pt_node_t expr_;
     std::vector<shared_pt_node_t> stmt_1_;
     std::vector<shared_pt_node_t> stmt_0_;
 
-    pt_if_t( shared_pt_node_t expr )
-        : expr_( expr )
+    pt_if_t( token_t tok, shared_pt_node_t expr )
+        : token_( tok )
+        , expr_( expr )
         , stmt_1_()
         , stmt_0_()
     {
+    }
+
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(token_.line_, token_.column_);
     }
 
     void add_stmt( shared_pt_node_t node,
@@ -429,6 +488,13 @@ struct pt_break_t
 public:
     HAS_RTTI("pt_break_t");
     VISITABLE();
+
+    token_t token_;
+
+    pt_break_t(token_t tok)
+        : token_(tok)
+    {
+    }
 
     struct {
 
@@ -461,6 +527,10 @@ public:
     {
     }
 
+    virtual source_pos_t get_source_pos() const override {
+        return expr_->get_source_pos();
+    }
+
     struct {
         pt_type_t type_;
     }
@@ -480,14 +550,19 @@ public:
         e_arg,
     };
 
+    enum kind_t {
+        e_primitive,
+        e_vector,
+    };
+
     scope_t scope_;
     token_t name_, type_;
     shared_pt_node_t expr_;
 
     pt_decl_var_t( scope_t scope,
-                    token_t name,
-                    token_t type,
-                    shared_pt_node_t expr )
+                   token_t name,
+                   token_t type,
+                   shared_pt_node_t expr )
         : scope_( e_unknown )
         , name_( name )
         , type_( type )
@@ -495,8 +570,30 @@ public:
     {
     }
 
+    virtual source_pos_t get_source_pos() const override {
+        return source_pos_t(name_.line_, name_.column_);
+    }
+
     struct {
         pt_type_t type_;
     }
     ext_;
+};
+
+struct pt_stmt_t
+    : public pt_node_t {
+public:
+    HAS_RTTI("pt_stmt_t");
+    VISITABLE();
+
+    pt_stmt_t(shared_pt_node_t node)
+        : child_(node) 
+    {
+    }
+
+    virtual source_pos_t get_source_pos() const override {
+        return child_->get_source_pos();
+    }
+
+    shared_pt_node_t child_;
 };

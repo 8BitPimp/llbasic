@@ -1,16 +1,27 @@
 #pragma once
 
-struct exception_t {
+#include <string>
+#include <stdint.h>
 
-    const char * message_;
+struct llb_fail_t {
 
-    exception_t()
-        : message_( nullptr )
+    llb_fail_t()
+        : msg_()
+        , line_(0)
+        , column_(0)
     {
     }
 
-    exception_t( const char * msg )
-        : message_( msg )
+    llb_fail_t(const std::string & str,
+               uint32_t line,
+               uint32_t column)
+        : msg_(str)
+        , line_(line)
+        , column_(column)
     {
     }
+
+    std::string msg_;
+    uint32_t line_;
+    uint32_t column_;
 };
