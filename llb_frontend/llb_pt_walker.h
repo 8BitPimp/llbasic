@@ -23,7 +23,7 @@ protected:
         return func->upcast<pt_decl_function_t>();
     }
 
-private:
+protected:
     void enter( pt_node_t & node ) {
         stack_.push_back(&node);
     }

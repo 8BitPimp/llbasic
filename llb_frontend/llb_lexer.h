@@ -50,6 +50,12 @@ protected:
         token_t tok(type);
         tok.line_ = line_;
         tok.column_ = column_;
+
+        assert(!line_table_.empty());
+        const char * start = *line_table_.rbegin();
+        assert(stream_ >= start);
+        column_ = uint32_t(stream_ - start);
+
         return tok;
     }
 
@@ -66,6 +72,7 @@ public:
         , size_( size )
         , tokens_( tokens )
         , line_( 0 )
+        , column_( 0 )
     {
     }
 

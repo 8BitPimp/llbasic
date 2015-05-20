@@ -70,28 +70,32 @@ map_tok_name_t map_tok_name[tok_count__] = {
     tok_ury_neg,        "-",
 };
 
-template <typename type_t, int size>
-static
-uint32_t array_size(type_t(&list)[size]) {
-    return size;
-}
+namespace {
 
-const char * token_type_name(token_type_t type) {
-    
-    for (uint32_t i = 0; i < array_size(map_tok_name); ++i)
-        if (map_tok_name[i].type_ == type)
-            return map_tok_name[i].name_;
+    template <typename type_t, int size>
+    static
+        uint32_t array_size(type_t(&list)[size]) {
+        return size;
+    }
 
-    assert(! "token without lookup entry");
-    return nullptr;
-}
+} /* namespace {} */
 
 token_t & token_list_t::pop(token_type_t type) {
 
     if (peek(0).type_ != type) {
-        const char * name = token_type_name(type);
+        const char * name = token_t::get_type_symbol(type);
         std::string msg = llb_string_t::format("expected '%0'", { name });
         throw llb_fail_t(msg, peek(0).line_, peek(0).column_);
     }
     return pop();
+}
+
+const char * token_t::get_type_symbol(token_type_t type) {
+
+    for (uint32_t i = 0; i < array_size(map_tok_name); ++i)
+        if (map_tok_name[i].type_ == type)
+            return map_tok_name[i].name_;
+
+    assert(!"token without lookup entry");
+    return nullptr;
 }

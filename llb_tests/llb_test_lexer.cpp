@@ -29,7 +29,7 @@ test_t tests[] = {
         [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t = tl.pop(tok_lit_integer);
-                if (t.value_.int_ != 1337)
+                if (t.get_int() != 1337)
                     return false;
             }
             catch (llb_fail_t &) {
@@ -46,7 +46,7 @@ test_t tests[] = {
         [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t = tl.pop(tok_lit_float);
-                if (!floats_equal( t.value_.float_, 3.14f))
+                if (!floats_equal( t.get_float(), 3.14f))
                     return false;
             }
             catch (llb_fail_t &) {
@@ -63,7 +63,7 @@ test_t tests[] = {
         [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t = tl.pop(tok_lit_integer);
-                if (t.value_.int_ != 0xcafe12)
+                if (t.get_int() != 0xcafe12)
                     return false;
             }
             catch (llb_fail_t &) {
@@ -80,7 +80,7 @@ test_t tests[] = {
         [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t = tl.pop(tok_lit_integer);
-                if (t.value_.int_ != 5)
+                if (t.get_int() != 5)
                     return false;
             }
             catch (llb_fail_t &) {
@@ -97,9 +97,9 @@ test_t tests[] = {
         [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t = tl.pop(tok_lit_string);
-                if (t.value_.string_.empty())
+                if (t.get_string().empty())
                     return false;
-                if (t.value_.string_ != "hello world")
+                if (t.get_string() != "hello world")
                     return false;
             }
             catch (llb_fail_t &) {
@@ -116,26 +116,25 @@ test_t tests[] = {
         [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
             try{
                 token_t t0 = tl.pop(tok_lit_integer);
-                if (t0.value_.int_ != 1234) return false;
+                if (t0.get_int() != 1234) return false;
 
                 token_t t1 = tl.pop(tok_lit_integer);
-                if (t1.value_.int_ != 0x1234) return false;
+                if (t1.get_int() != 0x1234) return false;
 
                 token_t t2 = tl.pop(tok_lit_integer);
-                if (t2.value_.int_ != 7) return false;
+                if (t2.get_int() != 7) return false;
 
                 token_t t3 = tl.pop(tok_lit_float);
-                if (!floats_equal(t3.value_.float_, 99.12f)) return false;
+                if (!floats_equal(t3.get_float(), 99.12f)) return false;
 
                 token_t t4 = tl.pop(tok_lit_integer);
-                if (t4.value_.int_ != 0) return false;
+                if (t4.get_int() != 0) return false;
 
                 token_t t5 = tl.pop(tok_lit_float);
-                if (!floats_equal(t5.value_.float_, 0.f)) return false;
+                if (!floats_equal(t5.get_float(), 0.f)) return false;
 
                 token_t t6 = tl.pop(tok_lit_string);
-                if (t6.value_.string_ != "greets") return false;
-                
+                if (t6.get_string() != "greets") return false;
             }
             catch (llb_fail_t &) {
                 return false;
@@ -167,6 +166,79 @@ test_t tests[] = {
         test_t::e_expect_lexer_fail,
         "\"multi line\n string\n",
         [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
+            return true;
+        }
+    },
+
+    {
+        test_t::e_stage_lexer,
+        test_t::e_expect_pass,
+        "; comment\n token\n",
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
+
+            try {
+                tl.pop(tok_eol);
+                tl.pop(tok_identifier);
+                tl.pop(tok_eol);
+                tl.pop(tok_eol);
+                if (!tl.at_eof())
+                    return false;
+            }
+            catch (llb_fail_t &) {
+                return false;
+            }
+            return true;
+        }
+    },
+
+    {
+        test_t::e_stage_lexer,
+        test_t::e_expect_pass,
+        " token ; comment\n token\n",
+        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
+
+            try {
+                tl.pop(tok_identifier);
+                tl.pop(tok_eol);
+                tl.pop(tok_identifier);
+                tl.pop(tok_eol);
+                tl.pop(tok_eol);
+                if (!tl.at_eof())
+                    return false;
+            }
+            catch (llb_fail_t &) {
+                return false;
+            }
+            return true;
+        }
+    },
+
+    {
+        test_t::e_stage_lexer,
+            test_t::e_expect_pass,
+            "a\n  b\n   0\n   \"hi\"",
+            [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
+
+            try {
+                token_t t0 = tl.pop(tok_identifier);
+                if (t0.line_ != 0 || t0.column_ != 1) return false;
+                tl.pop(tok_eol);
+
+                token_t t1 = tl.pop(tok_identifier);
+                if (t1.line_ != 1 || t1.column_ != 4) return false;
+                tl.pop(tok_eol);
+
+                token_t t2 = tl.pop(tok_lit_integer);
+                if (t2.line_ != 2 || t2.column_ != 5) return false;
+                tl.pop(tok_eol);
+
+                token_t t3 = tl.pop(tok_lit_string);
+                if (t3.line_ != 3 || t3.column_ != 8) return false;
+                tl.pop(tok_eol);
+            }
+            catch (llb_fail_t &) {
+                return false;
+            }
             return true;
         }
     }

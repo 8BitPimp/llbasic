@@ -24,6 +24,9 @@ std::string llb_string_t::format(
             case (llb_var_arg_t::e_int) :
                 stream << v.int_;
                 break;
+            case (llb_var_arg_t::e_uint) :
+                stream << v.uint_;
+                break;
             case (llb_var_arg_t::e_float) :
                 stream << v.float_;
                 break;

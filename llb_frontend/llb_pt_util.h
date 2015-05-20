@@ -30,7 +30,7 @@ public:
             if (func->name_.type_ != tok_identifier)
                 continue;
 
-            if (name == func->name_.value_.string_)
+            if (name == func->name_.get_string())
                 return func;
         }
         return nullptr;

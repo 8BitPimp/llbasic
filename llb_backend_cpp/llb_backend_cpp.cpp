@@ -7,9 +7,9 @@ void emit_whitespace() {
 void emit_token_string( const token_t & node ) {
 
     if (node.type_ == token_type_t::tok_identifier) {
-        if (node.value_.string_.empty())
+        if (node.get_string().empty())
             throw "empty identifier";
-        printf("%s", node.value_.string_.c_str());
+        printf("%s", node.get_string().c_str());
     }
     emit_whitespace();
 }

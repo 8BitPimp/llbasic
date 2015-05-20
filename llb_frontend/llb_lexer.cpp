@@ -124,7 +124,6 @@ char lexer_t::next( ) {
         column_ = 0;
 
     default:
-        column_++;
         return *(stream_++);
     }
 }
@@ -146,7 +145,8 @@ void lexer_t::skip_whitespace() {
         switch (peek()) {
         case ('\t'):
         case ('\r'):
-        case (' ' ):
+        case (' ') :
+            column_++;
             next();
             break;
         default:
@@ -171,13 +171,17 @@ void lexer_t::eat_alpha( ) {
     const char * end = stream_;
 
     if ( start == end )
-        fail("zero length alpha");
+        fail("zero length identifier");
 
     std::string str( start, end );
     assert( str.size() > 0 );
 
     token_t token = new_token( identify_alpha( str ) );
-    token.value_.string_ = str;
+    switch (token.type_) {
+    case ( tok_lit_string ):
+    case (tok_identifier) :
+        token.set_string(str);
+    }
     tokens_.push( token );
 }
 
@@ -224,14 +228,14 @@ void lexer_t::eat_number( ) {
 
     if (div == 0) {
 
-        token_t tok(tok_lit_integer);
-        tok.value_.int_ = num;
+        token_t tok = new_token(tok_lit_integer);
+        tok.set_int( num );
         tokens_.push(tok);
     }
     else {
 
         token_t tok = new_token(tok_lit_float);
-        tok.value_.float_ = float(double(num) / double(div));
+        tok.set_float( float(double(num) / double(div)) );
         tok.line_ = line_;
         tok.column_ = column_;
         tokens_.push(tok);
@@ -258,7 +262,7 @@ void lexer_t::eat_string( ) {
         fail("error parsing string literal");
 
     token_t tok = new_token(tok_lit_string);
-    tok.value_.string_.assign(start, end);
+    tok.set_string( std::string(start, end) );
     tokens_.push( tok );
 }
 

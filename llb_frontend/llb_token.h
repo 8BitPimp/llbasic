@@ -11,6 +11,8 @@
 
 struct token_t {
 
+    static const char * get_type_symbol( token_type_t type );
+
     token_t( token_type_t type )
         : type_( type )
         , line_( 0 )
@@ -31,6 +33,17 @@ struct token_t {
         return value_.string_;
     }
 
+    void set_string(const std::string & str) {
+        switch (type_) {
+        case (tok_lit_string) :
+        case (tok_identifier) :
+            value_.string_ = str;
+            break;
+        default:
+            assert(!"internal error");
+        }
+    }
+
     const int get_int() const {
         switch (type_) {
         case (tok_lit_integer):
@@ -41,6 +54,16 @@ struct token_t {
         return value_.int_;
     }
 
+    void set_int( int32_t in ) {
+        switch (type_) {
+        case (tok_lit_integer):
+            value_.int_ = in;
+            break;
+        default:
+            assert(!"internal error");
+        }
+    }
+
     const float get_float() const {
         switch (type_) {
         case (tok_lit_float):
@@ -49,6 +72,16 @@ struct token_t {
             assert(!"internal error");
         }
         return value_.float_;
+    }
+
+    void set_float( float in ) {
+        switch (type_) {
+        case (tok_lit_float) :
+            value_.float_ = in;
+            break;
+        default:
+            assert(!"internal error");
+        }
     }
 
     void fail(const char * msg) {

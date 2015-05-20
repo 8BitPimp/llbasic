@@ -13,6 +13,7 @@ struct test_t {
     
     enum {
 
+        e_stage_none ,
         e_stage_lexer,
         e_stage_pt
     }
