@@ -2,15 +2,19 @@
 
 #include <stdio.h>
 
-#include "llb_pt_walker.h"
 #include "llb_pt.h"
+#include "llb_pass.h"
+#include "llb_pt_walker.h"
 
 class pt_pass_printer_t
-        : public pt_walker_t {
+        : public pt_pass_t
+        , public pt_walker_t {
 protected:
     void indent();
 
 public:
+    virtual bool run(pt_t & pt, lexer_t & lexer, llb_fail_t & fail);
+
     virtual void visit(pt_module_t & n);
     virtual void visit(pt_literal_t & n);
     virtual void visit(pt_identifier_t & n);

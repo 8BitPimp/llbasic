@@ -10,9 +10,10 @@
 #include "llb_backend_cpp.h"
 
 // llb_passes
+#include "llb_pass_symbolic_link.h"
 #include "llb_pass_printer.h"
 
-const char source1[] = R"(
+const char module1[] = R"(
 
 global x:int = 3 + 4
 
@@ -22,12 +23,27 @@ function main:int( x:int, y:int )
     return x + 3
 end
 
-global l2:int=3-2, i3:float, i4:float=12*3
+global i2:int=3-2, i3:float, i4:float=12*3
 
-function y:int( )
-    local x:int=3, y:float=5
+function a:int( )
+    local x:int=3, x:float=5
 end
 )";
+
+const char module2[] = R"(
+
+)";
+
+struct module_t {
+
+    const char * source_;
+    uint32_t size_;
+
+}
+module[] = {
+    { module1, sizeof( module1 ) },
+    { module2, sizeof( module2 ) }
+};
 
 void on_fail( const llb_fail_t & fail, const lexer_t & lexer ) {
 
@@ -42,7 +58,7 @@ void on_fail( const llb_fail_t & fail, const lexer_t & lexer ) {
     if (!line.empty()) {
         printf("\"%s\"\n", line.c_str());
 
-        for (uint32_t i = 0; i < fail.column_; ++i)
+        for (uint32_t i = 0; i <= fail.column_; ++i)
             putchar(' ');
         putchar('^');
         printf("\n");
@@ -54,27 +70,37 @@ void on_fail( const llb_fail_t & fail, const lexer_t & lexer ) {
 
 int main( ) {
 
-    llb_fail_t except;
+    llb_fail_t fail;
 
+    // perform lexical analysis
     token_list_t tokens;
-    lexer_t lexer( source1, sizeof( source1 ), tokens );
-    if (! lexer.run( except ) ) {
-
-        on_fail(except, lexer);
+    lexer_t lexer(module[0].source_, module[0].size_, tokens);
+    if (!lexer.run(fail)) {
+        on_fail(fail, lexer);
         return -1;
     }
 
+    // construct a parse tree
     pt_t parse_tree;
     parser_t parser( tokens, parse_tree );
-    if (! parser.run( except ) ) {
-
-        on_fail(except, lexer);
+    if (!parser.run(fail)) {
+        on_fail(fail, lexer);
         return -2;
     }
 
-    pt_pass_printer_t printer;
-    parse_tree.visit( printer );
+    // run the symbolic linker pass
+    pt_pass_symbolic_link_t linker;
+    if (!linker.run(parse_tree, lexer, fail)) {
+        on_fail(fail, lexer);
+    }
 
+    // run the ast printer pass
+    pt_pass_printer_t printer;
+    if (!printer.run(parse_tree, lexer, fail)) {
+        on_fail(fail, lexer);
+    }
+    
+    // run the c++ codegen backend
     llb_backend_cpp_t backend_cpp;
     parse_tree.visit( backend_cpp );
 

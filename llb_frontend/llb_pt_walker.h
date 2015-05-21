@@ -33,6 +33,11 @@ protected:
     }
 
 public:
+    virtual void visit( pt_t & n ) {
+        for (auto & i : n.stack_)
+            i->accept(*this);
+    }
+
     virtual void visit( pt_module_t & n ) {
         enter( n );
         for (auto & i : n.globals_)

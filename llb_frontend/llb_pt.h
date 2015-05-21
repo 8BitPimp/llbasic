@@ -4,26 +4,18 @@
 #include "llb_token.h"
 #include <memory>
 
+class  pt_t;
 struct pt_node_t;
-
 struct pt_module_t;
-
 struct pt_op_bin_t;
 struct pt_op_ury_t;
-
 struct pt_literal_t;
 struct pt_identifier_t;
-
 struct pt_expr_t;
 struct pt_stmt_t;
-
 struct pt_decl_var_t;
 struct pt_decl_function_t;
-
 struct pt_stmt_t;
-#if 0
-struct pt_assign_t;
-#endif
 struct pt_return_t;
 struct pt_call_t;
 struct pt_if_t;
@@ -66,6 +58,7 @@ struct pt_type_t {
 
 class pt_node_visitor_t {
 public:
+    virtual void visit( pt_t & pt ) = 0;
     virtual void visit( pt_module_t & n ) = 0;
     virtual void visit( pt_literal_t & n ) = 0;
     virtual void visit( pt_identifier_t & n ) = 0;
@@ -78,9 +71,6 @@ public:
     virtual void visit( pt_return_t & n ) = 0;
     virtual void visit( pt_break_t & n ) = 0;
     virtual void visit( pt_continue_t & n ) = 0;
-#if 0
-    virtual void visit( pt_assign_t & n ) = 0;
-#endif
     virtual void visit( pt_call_t & n ) = 0;
     virtual void visit( pt_expr_t & n ) = 0;
     virtual void visit( pt_stmt_t & n ) = 0;
@@ -135,10 +125,9 @@ struct pt_node_t {
 };
 
 class pt_t {
-protected:
+public:
     std::vector<shared_pt_node_t> stack_;
 
-public:
     void push( shared_pt_node_t node_ptr ) {
         assert( node_ptr.get() );
         stack_.push_back( node_ptr );
@@ -169,8 +158,7 @@ public:
 
     void visit( pt_node_visitor_t & visitor ) {
 
-        for ( auto & i : stack_ )
-            i->accept( visitor );
+        visitor.visit(*this);
     }
 };
 
@@ -393,7 +381,7 @@ public:
 
     struct {
 
-        std::vector<weak_pt_node_t> var_decls_;
+        std::vector<weak_pt_node_t> locals_;
         pt_type_t type_;
     }
     ext_;

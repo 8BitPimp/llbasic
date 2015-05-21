@@ -6,6 +6,18 @@ void pt_pass_printer_t::indent() {
         printf(". ");
 }
 
+bool pt_pass_printer_t::run(pt_t & pt, lexer_t & lexer, llb_fail_t & fail) {
+
+    try {
+        pt.visit(*this);
+    }
+    catch (llb_fail_t & thrown) {
+        fail = thrown;
+        return false;
+    }
+    return true;
+}
+
 void pt_pass_printer_t::visit(pt_module_t & n) {
     indent();
     printf("%s\n", n.get_type().name());
