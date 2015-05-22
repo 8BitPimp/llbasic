@@ -3,12 +3,16 @@
 static
 test_t tests[] = {
 
-// check the import keyword is understood
 {
+    SOURCE_LOC,
     test_t::e_stage_pt,
     test_t::e_expect_pass,
-    "import \"test\"",
-    [](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
+    [](module_list_t&modules) {
+        modules.new_module("test", "import test_module");
+    },
+    [](module_list_t&tl, pt_t&pt, llb_fail_t&e) {
+        return true; 
+    }
 }
 
 };

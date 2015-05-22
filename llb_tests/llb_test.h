@@ -11,6 +11,8 @@
 
 struct test_t {
     
+    const char * source_loc_;
+
     enum {
 
         e_stage_none ,
@@ -27,9 +29,8 @@ struct test_t {
     }
     expect_;
 
-    const char * source_;
-
-    std::function<bool(llb_fail_t&, token_list_t&, pt_t&)> validate_;
+    std::function<void(module_list_t & modules_)> init_;
+    std::function<bool(module_list_t&, pt_t&, llb_fail_t&)> validate_;
 
     const char * category_;
     uint32_t index_;
@@ -62,3 +63,6 @@ bool floats_equal(float in, float cmp) {
     const float dif = (in<cmp) ? cmp-in : in-cmp;
     return dif < epsilon;
 }
+
+#define STRINGIFY(x) #x
+#define SOURCE_LOC (__FILE__ ":" STRINGIFY(__LINE__))
