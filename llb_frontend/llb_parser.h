@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "llb_forward.h"
 // forward
 struct token_t;
 class token_list_t;
@@ -11,6 +12,7 @@ class pt_t;
 
 class parser_t {
 protected:
+    shared_module_t module_;
     token_list_t & list_;
     pt_t & pt_;
 
@@ -44,11 +46,7 @@ protected:
     void fail(std::string str, const token_t & tok);
 
 public:
-    parser_t( token_list_t & list, pt_t & ast )
-        : list_( list )
-        , pt_( ast )
-    {
-    }
+    parser_t(shared_module_t module, pt_t & ast);
 
     bool run(struct llb_fail_t &);
 };

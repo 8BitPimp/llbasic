@@ -1,31 +1,9 @@
 #pragma once
 
-#include "llb_source_pos.h"
-#include "llb_token.h"
 #include <memory>
 
-class  pt_t;
-struct pt_node_t;
-struct pt_module_t;
-struct pt_op_bin_t;
-struct pt_op_ury_t;
-struct pt_literal_t;
-struct pt_identifier_t;
-struct pt_expr_t;
-struct pt_stmt_t;
-struct pt_decl_var_t;
-struct pt_decl_function_t;
-struct pt_stmt_t;
-struct pt_return_t;
-struct pt_call_t;
-struct pt_if_t;
-struct pt_while_t;
-struct pt_for_t;
-struct pt_break_t;
-struct pt_continue_t;
-
-typedef std::shared_ptr<pt_node_t> shared_pt_node_t;
-typedef std::weak_ptr<pt_node_t> weak_pt_node_t;
+#include "llb_forward.h"
+#include "llb_token.h"
 
 #define HAS_RTTI( NAME )                                    \
     static const pt_node_t::type_t & get_type_static() {   \
@@ -121,7 +99,7 @@ struct pt_node_t {
         return static_cast<type_t*>( this );
     }
 
-    virtual source_pos_t get_source_pos() const = 0;
+    virtual location_t get_location() const = 0;
 };
 
 class pt_t {
@@ -182,12 +160,12 @@ public:
         globals_.push_back(n);
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(0, 0);
-    }
-
     std::vector<shared_pt_node_t> functions_;
     std::vector<shared_pt_node_t> globals_;
+
+    virtual location_t get_location() const {
+        return location_t();
+    }
 };
 
 struct pt_op_bin_t
@@ -208,8 +186,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(operator_.line_, operator_.column_);
+    virtual location_t get_location() const override {
+        return operator_.pos_;
     }
 
     struct {
@@ -234,8 +212,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(operator_.line_, operator_.column_);
+    virtual location_t get_location() const override {
+        return operator_.pos_;
     }
 
     struct {
@@ -257,8 +235,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(value_.line_, value_.column_);
+    virtual location_t get_location() const override {
+        return value_.pos_;
     }
 
     struct {
@@ -280,8 +258,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(name_.line_, name_.column_);
+    virtual location_t get_location() const override {
+        return name_.pos_;
     }
 
     struct {
@@ -307,8 +285,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(token_.line_, token_.column_);
+    virtual location_t get_location() const override {
+        return token_.pos_;
     }
 
     struct {
@@ -338,8 +316,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(token_.line_, token_.column_);
+    virtual location_t get_location() const override {
+        return token_.pos_;
     }
 
     void add_stmt( shared_pt_node_t node ) {
@@ -367,8 +345,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(name_.line_, name_.column_);
+    virtual location_t get_location() const override {
+        return name_.pos_;
     }
 
     void add_arg( shared_pt_node_t node ) {
@@ -387,31 +365,6 @@ public:
     ext_;
 };
 
-#if 0
-struct pt_assign_t
-    : public pt_node_t {
-public:
-    HAS_RTTI("pt_assign_t");
-    VISITABLE();
-
-    token_t name_;
-    shared_pt_node_t expr_;
-
-    pt_assign_t( token_t name,
-                 shared_pt_node_t expr )
-        : name_( name )
-        , expr_( expr )
-    {
-    }
-
-    struct {
-
-        weak_pt_node_t decl_;
-    }
-    ext_;
-};
-#endif
-
 struct pt_call_t
     : public pt_node_t {
 public:
@@ -427,8 +380,8 @@ public:
     {
     };
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(name_.line_, name_.column_);
+    virtual location_t get_location() const override {
+        return name_.pos_;
     }
 
     void add_arg( shared_pt_node_t node ) {
@@ -461,8 +414,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(token_.line_, token_.column_);
+    virtual location_t get_location() const override {
+        return token_.pos_;
     }
 
     void add_stmt( shared_pt_node_t node,
@@ -515,8 +468,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return expr_->get_source_pos();
+    virtual location_t get_location() const override {
+        return expr_->get_location();
     }
 
     struct {
@@ -558,8 +511,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return source_pos_t(name_.line_, name_.column_);
+    virtual location_t get_location() const override {
+        return name_.pos_;
     }
 
     struct {
@@ -579,8 +532,8 @@ public:
     {
     }
 
-    virtual source_pos_t get_source_pos() const override {
-        return child_->get_source_pos();
+    virtual location_t get_location() const override {
+        return child_->get_location();
     }
 
     shared_pt_node_t child_;

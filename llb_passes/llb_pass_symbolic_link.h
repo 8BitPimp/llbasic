@@ -29,7 +29,7 @@ protected:
         for (auto &i : functions_) {
             token_t fname = i->upcast<pt_decl_function_t>()->name_;            
             if (iname.get_string() == fname.get_string())
-                throw llb_fail_t("function redefined", iname.line_, iname.column_);
+                throw llb_fail_t("function redefined", iname);
         }
         // push back new function
         functions_.push_back(func);
@@ -45,7 +45,7 @@ protected:
         for (auto &i : globals_) {
             token_t fname = i->upcast<pt_decl_var_t>()->name_;
             if (iname.get_string() == fname.get_string())
-                throw llb_fail_t("global redefined", iname.line_, iname.column_);
+                throw llb_fail_t("global redefined", iname);
         }
         // push back new global
         globals_.push_back(global);
@@ -55,7 +55,7 @@ protected:
     }
 
 public:
-    virtual bool run(pt_t & pt, lexer_t & lexer, llb_fail_t & fail) {
+    virtual bool run(pt_t & pt, llb_fail_t & fail) {
 
         try {
             pt.visit(*this);

@@ -6,7 +6,8 @@
 #include <vector>
 #include <memory>
 
-#include "llb_error.h"
+#include "llb_forward.h"
+#include "llb_fail.h"
 #include "llb_token_types.h"
 
 struct token_t {
@@ -15,8 +16,7 @@ struct token_t {
 
     token_t( token_type_t type )
         : type_( type )
-        , line_( 0 )
-        , column_( 0 )
+        , pos_()
     {
     }
 
@@ -85,7 +85,7 @@ struct token_t {
     }
 
     void fail(const char * msg) {
-        throw llb_fail_t(msg, line_, column_);
+        throw llb_fail_t(msg, pos_);
     }
 
     struct value_t {
@@ -103,8 +103,7 @@ struct token_t {
 
     } value_;
 
-    uint32_t line_;
-    uint32_t column_;
+    location_t pos_;
 };
 
 class token_list_t {

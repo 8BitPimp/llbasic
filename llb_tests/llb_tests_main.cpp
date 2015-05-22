@@ -1,5 +1,5 @@
 // llb_frontend
-#include "llb_error.h"
+#include "llb_fail.h"
 #include "llb_token.h"
 #include "llb_lexer.h"
 #include "llb_pt.h"
@@ -28,7 +28,7 @@ bool run_test(test_t & test) {
         return test.validate_(except, tokens, parse_tree);
     }
 
-    lexer_t lexer(test.source_, -1, tokens);
+    lexer_t lexer(test.source_, tokens);
     if (!lexer.run(except)) {
         return test.expect_ == test.e_expect_lexer_fail;
     }

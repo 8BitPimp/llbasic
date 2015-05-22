@@ -1,5 +1,6 @@
-#include "llb_error.h"
+#include "llb_fail.h"
 #include "llb_lexer.h"
+#include "llb_token.h"
 
 namespace {
 
@@ -81,15 +82,6 @@ namespace {
         "global",   tok_key_global,
         "local",    tok_key_local,
 
-#if 0
-        "none",     tok_key_none,
-        "bool",     tok_key_bool,
-        "int",      tok_key_int,
-        "float",    tok_key_float,
-        "string",   tok_key_string,
-        "func",     tok_key_func,
-#endif
-
         "type",     tok_key_type,
         "function", tok_key_function,
         "end",      tok_key_end,
@@ -118,8 +110,9 @@ char lexer_t::next( ) {
         return *stream_;
 
     case ('\n') :
-        tokens_.push(new_token(tok_eol));
-        line_table_.push_back(stream_ + 1);
+        push_token(new_token(tok_eol));
+        if ( module_ )
+            module_->line_begin_.push_back(stream_ + 1);
         line_++;
         column_ = 0;
 
@@ -182,7 +175,7 @@ void lexer_t::eat_alpha( ) {
     case (tok_identifier) :
         token.set_string(str);
     }
-    tokens_.push( token );
+    push_token(token);
 }
 
 void lexer_t::eat_number( ) {
@@ -230,15 +223,13 @@ void lexer_t::eat_number( ) {
 
         token_t tok = new_token(tok_lit_integer);
         tok.set_int( num );
-        tokens_.push(tok);
+        push_token(tok);
     }
     else {
 
         token_t tok = new_token(tok_lit_float);
         tok.set_float( float(double(num) / double(div)) );
-        tok.line_ = line_;
-        tok.column_ = column_;
-        tokens_.push(tok);
+        push_token(tok);
     }
 }
 
@@ -263,7 +254,7 @@ void lexer_t::eat_string( ) {
 
     token_t tok = new_token(tok_lit_string);
     tok.set_string( std::string(start, end) );
-    tokens_.push( tok );
+    push_token(tok);
 }
 
 bool lexer_t::found( const char * str ) {
@@ -283,7 +274,7 @@ bool lexer_t::eat_special( ) {
 
         const char * str = specials[i].str_;
         if ( found(str) ) {
-            tokens_.push(new_token(specials[i].type_));
+            push_token(new_token(specials[i].type_));
             return true;
         }
     }
@@ -298,8 +289,10 @@ void lexer_t::eat_comment() {
 
 bool lexer_t::run(llb_fail_t & error) {
 
-    line_table_.clear();
-    line_table_.push_back(stream_);
+    if (module_) {
+        module_->line_begin_.clear();
+        module_->line_begin_.push_back(stream_);
+    }
 
     try {
 
@@ -343,8 +336,8 @@ bool lexer_t::run(llb_fail_t & error) {
             fail("unexpected charactor");
         }
 
-        tokens_.push(new_token(tok_eol));
-        tokens_.push(new_token(tok_eof));
+        push_token(new_token(tok_eol));
+        push_token(new_token(tok_eof));
     }
     catch (llb_fail_t thrown) {
         error = thrown;
@@ -353,22 +346,35 @@ bool lexer_t::run(llb_fail_t & error) {
     return true;
 }
 
-std::string lexer_t::get_line(uint32_t line) const {
+token_t lexer_t::new_token(token_type_t type) {
 
-    if (line_table_.size() < line)
-        return std::string();
+    token_t tok(type);
+    tok.pos_.set(line_, column_, module_);
 
-    const char * start = line_table_[line];
-    const char * end = start;
+    if (module_) {
 
-    while (true) {
-        if (end[0] == '\0') break;
-        if (end[0] == '\n') break;
-        end++;
+        auto & line_tab = module_->line_begin_;
+        assert(!line_tab.empty());
+        const char * start = *line_tab.rbegin();
+        assert(stream_ >= start);
+        column_ = uint32_t(stream_ - start);
     }
 
-    if (start == end)
-        return std::string();
+    return tok;
+};
 
-    return std::string(start, end);
+lexer_t::lexer_t(shared_module_t module)
+    : module_(module)
+    , line_(0)
+    , column_(0)
+    , stream_( nullptr )
+{
+    assert(module.get());
+    stream_ = module->source_;
+}
+
+void lexer_t::push_token(const token_t & token) {
+
+    assert(module_);
+    module_->tokens_->push(token);
 }

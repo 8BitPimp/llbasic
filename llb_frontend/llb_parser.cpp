@@ -1,7 +1,8 @@
-#include "llb_error.h"
+#include "llb_fail.h"
 #include "llb_parser.h"
 #include "llb_token.h"
 #include "llb_pt.h"
+#include "llb_module.h"
 
 namespace {
 
@@ -243,6 +244,8 @@ void parser_t::parse_module() {
     std::unique_ptr<pt_module_t> module( new pt_module_t );
     assert( module.get() );
 
+    uint32_t ix = pt_.index();
+
     while (!list_.at_eof()) {
 
         token_t &tok = list_.peek(0);
@@ -269,19 +272,19 @@ void parser_t::parse_module() {
         }
     }
 
-    assert(pt_.index() == 0);
+    assert(pt_.index() == ix);
     pt_.push( module.release() );
 }
 
 void parser_t::fail(std::string str, const pt_node_t & node) {
 
-    source_pos_t pos = node.get_source_pos();
+    location_t pos = node.get_location();
     throw llb_fail_t(str, pos.line_, pos.column_);
 }
 
 void parser_t::fail(std::string str, const token_t & tok) {
 
-    throw llb_fail_t(str, tok.line_, tok.column_);
+    throw llb_fail_t(str, token_t(tok));
 }
 
 bool parser_t::run(llb_fail_t & error) {
@@ -296,4 +299,11 @@ bool parser_t::run(llb_fail_t & error) {
     }
 
     return true;
+}
+
+parser_t::parser_t(shared_module_t module, pt_t & ast)
+    : module_(module)
+    , list_(*module->tokens_.get())
+    , pt_(ast)
+{
 }

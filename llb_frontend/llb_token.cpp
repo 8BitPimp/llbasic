@@ -85,7 +85,7 @@ token_t & token_list_t::pop(token_type_t type) {
     if (peek(0).type_ != type) {
         const char * name = token_t::get_type_symbol(type);
         std::string msg = llb_string_t::format("expected '%0'", { name });
-        throw llb_fail_t(msg, peek(0).line_, peek(0).column_);
+        throw llb_fail_t(msg, peek(0));
     }
     return pop();
 }

@@ -2,7 +2,8 @@
 #include "llb_string.h"
 
 // llb_frontend
-#include "llb_error.h"
+#include "llb_fail.h"
+#include "llb_module.h"
 #include "llb_token.h"
 #include "llb_lexer.h"
 #include "llb_pt.h"
@@ -32,36 +33,38 @@ end
 
 const char module2[] = R"(
 
+function main:int()
+    return 0
+end
 )";
 
-struct module_t {
+void on_fail( const llb_fail_t & fail ) {
 
-    const char * source_;
-    uint32_t size_;
+    shared_module_t module = fail.location_.module_.lock();
 
-}
-module[] = {
-    { module1, sizeof( module1 ) },
-    { module2, sizeof( module2 ) }
-};
-
-void on_fail( const llb_fail_t & fail, const lexer_t & lexer ) {
+    std::string module_name;
+    if (module)
+        module_name = module->name_;
 
     std::string msg = llb_string_t::format(
-        "error: %0 @ line %1:%2", {
+        "error:\n . %0\n . %3 %1,%2\n", {
         fail.msg_.c_str(),
-        fail.line_,
-        fail.column_ });
-    printf("%s\n", msg.c_str());
+        fail.location_.line_,
+        fail.location_.column_,
+        module_name });
+    printf("%s", msg.c_str());
 
-    std::string line = lexer.get_line(fail.line_);
-    if (!line.empty()) {
-        printf("\"%s\"\n", line.c_str());
+    if (module) {
 
-        for (uint32_t i = 0; i <= fail.column_; ++i)
-            putchar(' ');
-        putchar('^');
-        printf("\n");
+        std::string line = fail.location_.get_line();
+        if (!line.empty()) {
+            printf(" . \"%s\"\n", line.c_str());
+
+            for (uint32_t i = 0; i <= fail.location_.column_+3; ++i)
+                putchar(' ');
+            putchar('^');
+            printf("\n");
+        }
     }
 
     getchar();
@@ -71,38 +74,47 @@ void on_fail( const llb_fail_t & fail, const lexer_t & lexer ) {
 int main( ) {
 
     llb_fail_t fail;
-
-    // perform lexical analysis
-    token_list_t tokens;
-    lexer_t lexer(module[0].source_, module[0].size_, tokens);
-    if (!lexer.run(fail)) {
-        on_fail(fail, lexer);
-        return -1;
-    }
-
-    // construct a parse tree
     pt_t parse_tree;
-    parser_t parser( tokens, parse_tree );
-    if (!parser.run(fail)) {
-        on_fail(fail, lexer);
-        return -2;
+
+    module_list_t modules;
+    modules.new_module("module1", module1);
+    modules.new_module("module2", module2);
+
+    // loop over all modules
+    for (auto & module : modules.list_) {
+
+        // perform lexical analysis
+        lexer_t lexer(module);
+        if (!lexer.run(fail)) {
+            on_fail(fail);
+            return -1;
+        }
+
+        // construct a parse tree
+        parser_t parser(module, parse_tree);
+        if (!parser.run(fail)) {
+            on_fail(fail);
+            return -2;
+        }
     }
 
     // run the symbolic linker pass
     pt_pass_symbolic_link_t linker;
-    if (!linker.run(parse_tree, lexer, fail)) {
-        on_fail(fail, lexer);
+    if (!linker.run(parse_tree, fail)) {
+        on_fail(fail);
     }
 
     // run the ast printer pass
     pt_pass_printer_t printer;
-    if (!printer.run(parse_tree, lexer, fail)) {
-        on_fail(fail, lexer);
+    if (!printer.run(parse_tree, fail)) {
+        on_fail(fail);
     }
     
+#if 0
     // run the c++ codegen backend
     llb_backend_cpp_t backend_cpp;
     parse_tree.visit( backend_cpp );
+#endif
 
     getchar();
     return 0;

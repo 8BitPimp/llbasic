@@ -3,7 +3,7 @@
 #include <vector>
 
 // llb_frontend
-#include "llb_error.h"
+#include "llb_fail.h"
 #include "llb_token.h"
 #include "llb_lexer.h"
 #include "llb_pt.h"

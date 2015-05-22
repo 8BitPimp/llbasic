@@ -6,7 +6,7 @@ void pt_pass_printer_t::indent() {
         printf(". ");
 }
 
-bool pt_pass_printer_t::run(pt_t & pt, lexer_t & lexer, llb_fail_t & fail) {
+bool pt_pass_printer_t::run(pt_t & pt, llb_fail_t & fail) {
 
     try {
         pt.visit(*this);

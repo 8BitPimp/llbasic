@@ -13,7 +13,7 @@ protected:
     void indent();
 
 public:
-    virtual bool run(pt_t & pt, lexer_t & lexer, llb_fail_t & fail);
+    virtual bool run(pt_t & pt, llb_fail_t & fail);
 
     virtual void visit(pt_module_t & n);
     virtual void visit(pt_literal_t & n);
