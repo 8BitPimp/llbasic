@@ -7,13 +7,13 @@ llb_fail_t::llb_fail_t()
 {
 }
 
-llb_fail_t::llb_fail_t(const std::string & str, token_t & tok)
+llb_fail_t::llb_fail_t(const std::string & str, llb_token_t & tok)
     : msg_(str)
     , location_(tok.pos_)
 {
 }
 
-llb_fail_t::llb_fail_t(const std::string & str, location_t & pos)
+llb_fail_t::llb_fail_t(const std::string & str, llb_location_t & pos)
     : msg_(str)
     , location_(pos)
 {

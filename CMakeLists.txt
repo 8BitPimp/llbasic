@@ -27,7 +27,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAGS}")
 
 add_subdirectory(llb_util)
 add_subdirectory(llb_frontend)
-add_subdirectory(llb_backend_llvm)
 add_subdirectory(llb_backend_cpp)
 add_subdirectory(llb_passes)
 add_subdirectory(llb_tests)

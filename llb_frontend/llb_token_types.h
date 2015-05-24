@@ -1,6 +1,6 @@
 #pragma once
 
-enum token_type_t {
+enum llb_token_type_t {
 
     tok_empty = 0,
 

@@ -32,7 +32,7 @@ bool run_test(test_t & test) {
 
     for (auto & module : modules.list_) {
 
-        lexer_t lexer(module);
+        llb_lexer_t lexer(module);
         if (!lexer.run(fail)) {
             return test.expect_ == test.e_expect_lexer_fail;
         }
@@ -45,7 +45,7 @@ bool run_test(test_t & test) {
 
     for (auto & module : modules.list_) {
 
-        parser_t parser(module, parse_tree);
+        llb_parser_t parser(module, parse_tree);
         if (!parser.run(fail)) {
             return test.expect_ == test.e_expect_parse_fail;
         }

@@ -12,11 +12,11 @@ struct llb_fail_t {
 
     llb_fail_t(
         const std::string & str, 
-        token_t & tok);
+        llb_token_t & tok);
 
     llb_fail_t(
         const std::string & str, 
-        location_t & pos);
+        llb_location_t & pos);
 
     llb_fail_t(
         const std::string & str,
@@ -24,5 +24,5 @@ struct llb_fail_t {
         uint32_t column);
 
     std::string msg_;
-    location_t location_;
+    llb_location_t location_;
 };

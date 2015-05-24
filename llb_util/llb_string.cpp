@@ -57,6 +57,11 @@ void llb_stream_t::print(const std::string & str) {
     stream_ << str;
 }
 
+void llb_stream_t::println(const std::string & str) {
+    stream_ << str << std::endl;
+}
+
+
 void llb_stream_t::print(const std::string & fmt, const std::initializer_list<llb_var_arg_t> & args) {
     stream_ << llb_string_t::format(fmt, args);
 }
@@ -87,6 +92,6 @@ const char * llb_stream_t::to_cstring() const {
 
 void llb_stream_t::fill(const char ch, uint32_t count) {
     for (uint32_t i = 0; i < count; i++) {
-        stream_.put(count);
+        stream_.put(ch);
     }
 }

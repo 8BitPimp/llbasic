@@ -10,9 +10,10 @@
 #include "llb_pt.h"
 #include "llb_parser.h"
 #include "llb_backend_cpp.h"
+#include "llb_context.h"
 
 // llb_passes
-#include "llb_pass_symbolic_link.h"
+#include "llb_pass_linker.h"
 #include "llb_pass_printer.h"
 
 // argument parser
@@ -43,7 +44,7 @@ struct llb_driver_cxt_t {
 
 void on_fail( const llb_fail_t & fail ) {
 
-    shared_module_t module = fail.location_.module_.lock();
+    shared_llb_module_t module = fail.location_.module_.lock();
 
     std::string module_name;
     if (module)
@@ -86,7 +87,7 @@ load_modules( llb_driver_cxt_t & cxt ) {
             return false;
         }
 
-        shared_module_t module = cxt.modules_.new_module(std::string(path), buffer.data_);
+        shared_llb_module_t module = cxt.modules_.new_module(std::string(path), buffer.data_);
         if (!module) {
             cxt.message_.push_back(
                 llb_string_t::format("unable to create new module from '%0'", { path }));
@@ -158,41 +159,42 @@ int main( const int argc, const char ** args  ) {
     for (auto & module : llb_cxt.modules_.list_) {
 
         // perform lexical analysis
-        lexer_t lexer(module);
+        llb_lexer_t lexer(module);
         if (!lexer.run(fail)) {
             on_fail(fail);
             return -1;
         }
 
         // construct a parse tree
-        parser_t parser(module, llb_cxt.modules_.pt_);
+        llb_parser_t parser(module, llb_cxt.modules_.pt_);
         if (!parser.run(fail)) {
             on_fail(fail);
             return -2;
         }
     }
 
-    // run the symbolic linker pass
-    pt_pass_symbolic_link_t linker;
-    if (!linker.run(llb_cxt.modules_, fail)) {
-        on_fail(fail);
-    }
+    llb_pass_manager_t manager;
+    manager.register_defaults();
+    manager.register_pass(new llb_creator_backend_cpp_t);
+
+    manager.schedule(llb_pass_type_t::e_pass_hoist_var);
+    manager.schedule(llb_pass_type_t::e_pass_linker);
 
     // emit the ast
     std::string path;
     if (llb_cxt.args_.find("emit-ast", path)) {
         // run the ast printer pass
-        pt_pass_printer_t printer(path);
-        if (!printer.run(llb_cxt.modules_, fail)) {
-            on_fail(fail);
-        }
+        manager.schedule(llb_pass_type_t::e_pass_printer);
     }
     
     // translate to cpp code
     if (llb_cxt.args_.find("emit-cpp", path)) {
         // run the c++ codegen backend
-        llb_backend_cpp_t backend_cpp(path);
-        llb_cxt.modules_.pt_.visit(backend_cpp);
+        manager.schedule(llb_pass_type_t::e_pass_backend_cpp);
+    }
+
+    // run all of the passes
+    if (!manager.run( llb_cxt.modules_ )) {
     }
 
     print_messages(llb_cxt);

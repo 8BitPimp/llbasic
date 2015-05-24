@@ -8,6 +8,7 @@
 #include "llb_lexer.h"
 #include "llb_pt.h"
 #include "llb_parser.h"
+#include "llb_context.h"
 
 #define STRINGIFY(x) #x
 #define SOURCE_LOC (__FILE__ ":" STRINGIFY(__LINE__))
@@ -75,7 +76,7 @@ namespace {
         return arg;
     }
 
-    token_list_t & get_token_list(llb_context_t & modules, uint32_t index) {
+    llb_token_list_t & get_token_list(llb_context_t & modules, uint32_t index) {
 
         auto & list = modules.list_;
         assert(list.size() > index);

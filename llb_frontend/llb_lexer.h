@@ -6,12 +6,12 @@
 #include "llb_token_types.h"
 #include "llb_module.h"
 
-class token_list_t;
-struct token_t;
+class llb_token_list_t;
+struct llb_token_t;
 
-class lexer_t {
+class llb_lexer_t {
 protected:
-    shared_module_t module_;
+    shared_llb_module_t module_;
     uint32_t line_;
     uint32_t column_;
     const char * stream_;
@@ -36,7 +36,7 @@ protected:
 
     void skip_whitespace( );
 
-    token_type_t identify_alpha( std::string & str );
+    llb_token_type_t identify_alpha( std::string & str );
 
     bool found( const char * str );
 
@@ -46,17 +46,17 @@ protected:
     bool eat_special( );
     void eat_comment( );
 
-    token_t new_token(token_type_t type);
+    llb_token_t new_token(llb_token_type_t type);
 
     void fail(std::string str) {
         throw llb_fail_t(str, line_, column_);
     }
 
-    void push_token(const token_t & token);
+    void push_token(const llb_token_t & token);
 
 public:
 
-    lexer_t(shared_module_t module);
+    llb_lexer_t(shared_llb_module_t module);
     
     bool run(struct llb_fail_t &);
 };

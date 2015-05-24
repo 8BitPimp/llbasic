@@ -6,18 +6,18 @@
 
 struct token_stack_t {
 
-    void push( token_t & tok ) {
+    void push( llb_token_t & tok ) {
         stack_.push_back( tok );
     }
 
-    token_t top( ) {
+    llb_token_t top( ) {
         assert( stack_.size() > 0 );
         return *stack_.rbegin();
     }
 
-    token_t pop( ) {
+    llb_token_t pop( ) {
         assert( stack_.size() > 0 );
-        token_t tok = *stack_.rbegin();
+        llb_token_t tok = *stack_.rbegin();
         stack_.pop_back();
         return tok;
     }
@@ -34,7 +34,7 @@ struct token_stack_t {
         return uint32_t(stack_.size());
     }
 
-    std::vector<token_t> stack_;
+    std::vector<llb_token_t> stack_;
 };
 
 struct expr_info_t {
@@ -48,7 +48,7 @@ struct expr_info_t {
 
 namespace {
 
-    int32_t precedence(token_type_t type) {
+    int32_t precedence(llb_token_type_t type) {
 
         switch (type) {
 
@@ -88,17 +88,17 @@ namespace {
         }
     }
 
-    bool is_operator(token_type_t type) {
+    bool is_operator(llb_token_type_t type) {
 
         return precedence(type) > -1;
     }
 
 } // namespace {}
 
-void parser_t::parse_expr_lhs( expr_info_t & expr ) {
+void llb_parser_t::parse_expr_lhs( expr_info_t & expr ) {
 
     bool unary_op = false;
-    token_t unary = list_.peek(0);
+    llb_token_t unary = list_.peek(0);
 
     switch (list_.peek(0).type_) {
     case ( tok_ury_neg ):
@@ -153,14 +153,14 @@ void parser_t::parse_expr_lhs( expr_info_t & expr ) {
     }
 }
 
-void parser_t::parse_expr_reduce( expr_info_t & expr, int32_t prec ) {
+void llb_parser_t::parse_expr_reduce( expr_info_t & expr, int32_t prec ) {
 
     while (! expr.ops_.empty() ) {
 
         if (precedence(expr.ops_.top().type_) < prec)
             break;
 
-        token_t op = expr.ops_.pop();
+        llb_token_t op = expr.ops_.pop();
 
         shared_pt_node_t rhs = pt_.pop();
         shared_pt_node_t lhs = pt_.pop();
@@ -169,13 +169,13 @@ void parser_t::parse_expr_reduce( expr_info_t & expr, int32_t prec ) {
     }
 }
 
-void parser_t::parse_expr_inner( expr_info_t & expr ) {
+void llb_parser_t::parse_expr_inner( expr_info_t & expr ) {
 
     parse_expr_lhs( expr );
 
     if (! is_operator( list_.peek(0).type_ ))
         return;
-    token_t & op = list_.pop();
+    llb_token_t & op = list_.pop();
 
     enum action_t {
         e_shift,
@@ -199,7 +199,7 @@ void parser_t::parse_expr_inner( expr_info_t & expr ) {
     parse_expr_inner( expr );
 }
 
-void parser_t::parse_expr() {
+void llb_parser_t::parse_expr() {
 
     expr_info_t expr;
     parse_expr_inner( expr );

@@ -2,7 +2,7 @@
 
 #include "llb_pt.h"
 
-class pt_walker_t
+class llb_pt_walker_t
     : public pt_node_visitor_t {
 protected:
     std::vector<pt_node_t*> stack_;
@@ -136,16 +136,7 @@ public:
         leave();
     }
 #endif
-
-#if 0
-    virtual void visit( pt_assign_t & n ) {
-        enter( n );
-        if (n.expr_)
-            n.expr_->accept(*this);
-        leave();
-    }
-#endif
-
+    
     virtual void visit( pt_call_t & n ) {
         enter( n );
         for (auto & i : n.arg_)

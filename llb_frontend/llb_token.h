@@ -10,17 +10,17 @@
 #include "llb_fail.h"
 #include "llb_token_types.h"
 
-struct token_t {
+struct llb_token_t {
 
-    static const char * get_type_symbol( token_type_t type );
+    static const char * get_type_symbol( llb_token_type_t type );
 
-    token_t( token_type_t type )
+    llb_token_t( llb_token_type_t type )
         : type_( type )
         , pos_()
     {
     }
 
-    token_type_t type_;
+    llb_token_type_t type_;
 
     const std::string & get_string() const {
         switch (type_) {
@@ -103,26 +103,26 @@ struct token_t {
 
     } value_;
 
-    location_t pos_;
+    llb_location_t pos_;
 };
 
-class token_list_t {
+class llb_token_list_t {
 protected:
-    token_t & head( ) {
+    llb_token_t & head( ) {
         return list_[ index_ ];
     }
 
     uint32_t index_;
-    std::vector<token_t> list_;
+    std::vector<llb_token_t> list_;
 
 public:
-    token_list_t()
+    llb_token_list_t()
         : index_( 0 )
         , list_()
     {
     }
 
-    void push( const token_t & t ) {
+    void push( const llb_token_t & t ) {
         list_.push_back( t );
     }
 
@@ -130,29 +130,29 @@ public:
         return list_[index_].type_ == tok_eof;
     }
 
-    token_t & peek( int i ) {
+    llb_token_t & peek( int i ) {
         assert (index_ + i < list_.size());
         return list_[index_+i];
     }
 
-    token_t & pop( ) {
-        token_t & tok = head();
+    llb_token_t & pop( ) {
+        llb_token_t & tok = head();
         if (tok.type_ != tok_eof)
             index_++;
         assert (index_ < list_.size());
         return tok;
     }
 
-    token_t & pop(token_type_t type);
+    llb_token_t & pop(llb_token_type_t type);
 
-    token_t & previous() {
+    llb_token_t & previous() {
         if (index_ <= 0)
             assert(!"internal error");
         return list_[index_ - 1];
 
     }
 
-    bool found( token_type_t type ) {
+    bool found( llb_token_type_t type ) {
         if ( head().type_ != type )
             return false;
         index_++;

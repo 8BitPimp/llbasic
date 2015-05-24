@@ -1,28 +1,28 @@
 #include "llb_location.h"
 #include "llb_module.h"
 
-location_t::location_t()
+llb_location_t::llb_location_t()
     : line_(0)
     , column_(0)
     , module_()
 {
 }
 
-location_t::location_t(uint32_t l, uint32_t c)
+llb_location_t::llb_location_t(uint32_t l, uint32_t c)
     : line_(l)
     , column_(c)
 {
 }
 
-void location_t::set(uint32_t l, uint32_t c, shared_module_t module) {
+void llb_location_t::set(uint32_t l, uint32_t c, shared_llb_module_t module) {
     line_ = l;
     column_ = c;
     module_ = module;
 }
 
-std::string location_t::get_line() const {
+std::string llb_location_t::get_line() const {
 
-    shared_module_t module = module_.lock();
+    shared_llb_module_t module = module_.lock();
     if (!module)
         return std::string();
 

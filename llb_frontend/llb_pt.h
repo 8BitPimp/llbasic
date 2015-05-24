@@ -110,7 +110,7 @@ struct pt_node_t {
         return static_cast<type_t*>( this );
     }
 
-    virtual location_t get_location() const = 0;
+    virtual llb_location_t get_location() const = 0;
 };
 
 class pt_t {
@@ -198,8 +198,8 @@ public:
     }
     ext_;
 
-    virtual location_t get_location() const {
-        return location_t();
+    virtual llb_location_t get_location() const {
+        return llb_location_t();
     }
 };
 
@@ -209,11 +209,11 @@ public:
     HAS_RTTI("pt_function_decl_t");
     VISITABLE();
 
-    token_t name_;
-    token_t ret_type_;
+    llb_token_t name_;
+    llb_token_t ret_type_;
     std::vector<shared_pt_node_t> args_;
 
-    pt_function_decl_t(token_t name, token_t type)
+    pt_function_decl_t(llb_token_t name, llb_token_t type)
         : name_(name)
         , ret_type_(type)
     {}
@@ -222,7 +222,7 @@ public:
         args_.push_back(node);
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return name_.pos_;
     }
 
@@ -244,21 +244,25 @@ public:
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         shared_pt_node_t proto = proto_.lock();
         if (proto.get())
             return proto->get_location();
         else
-            return location_t();
+            return llb_location_t();
     }
 
     void add_stmt(shared_pt_node_t node) {
         stmt_.push_back(node);
     }
 
+    void add_local(shared_pt_node_t local) {
+        ext_.locals_.push_back(local);
+    }
+
     struct {
 
-        std::vector<weak_pt_node_t> locals_;
+        std::vector<shared_pt_node_t> locals_;
         pt_type_t type_;
     }
     ext_;
@@ -278,12 +282,12 @@ public:
     };
 
     scope_t scope_;
-    token_t name_, type_;
+    llb_token_t name_, type_;
     shared_pt_node_t expr_;
 
     pt_decl_var_t(scope_t scope,
-        token_t name,
-        token_t type,
+        llb_token_t name,
+        llb_token_t type,
         shared_pt_node_t expr)
         : scope_(e_unknown)
         , name_(name)
@@ -292,7 +296,7 @@ public:
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return name_.pos_;
     }
 
@@ -308,10 +312,10 @@ public:
     HAS_RTTI( "pt_op_bin_t" );
     VISITABLE();
 
-    token_t operator_;
+    llb_token_t operator_;
     shared_pt_node_t lhs_, rhs_;
 
-    pt_op_bin_t( token_t op,
+    pt_op_bin_t( llb_token_t op,
                  shared_pt_node_t lhs,
                  shared_pt_node_t rhs )
         : operator_( op )
@@ -320,7 +324,7 @@ public:
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return operator_.pos_;
     }
 
@@ -336,17 +340,17 @@ public:
     HAS_RTTI( "pt_op_ury_t" );
     VISITABLE();
 
-    token_t operator_;
+    llb_token_t operator_;
     shared_pt_node_t child_;
 
-    pt_op_ury_t( token_t op,
+    pt_op_ury_t( llb_token_t op,
                  shared_pt_node_t child )
         : operator_( op )
         , child_( child )
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return operator_.pos_;
     }
 
@@ -362,14 +366,14 @@ public:
     HAS_RTTI("pt_literal_t");
     VISITABLE();
 
-    token_t value_;
+    llb_token_t value_;
 
-    pt_literal_t( token_t value )
+    pt_literal_t( llb_token_t value )
         : value_( value )
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return value_.pos_;
     }
 
@@ -385,14 +389,14 @@ public:
     HAS_RTTI("pt_identifier_t");
     VISITABLE();
 
-    token_t name_;
+    llb_token_t name_;
 
-    pt_identifier_t( token_t name )
+    pt_identifier_t( llb_token_t name )
         : name_( name )
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return name_.pos_;
     }
 
@@ -409,17 +413,17 @@ public:
     HAS_RTTI("pt_return_t");
     VISITABLE();
 
-    token_t token_;
+    llb_token_t token_;
     shared_pt_node_t expr_;
 
-    pt_return_t( token_t tok,
+    pt_return_t( llb_token_t tok,
                  shared_pt_node_t expr )
         : token_( tok )
         , expr_( expr )
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return token_.pos_;
     }
 
@@ -438,11 +442,11 @@ public:
     HAS_RTTI("pt_while_t");
     VISITABLE();
 
-    token_t token_;
+    llb_token_t token_;
     shared_pt_node_t expr_;
     std::vector<shared_pt_node_t> stmt_;
 
-    pt_while_t( token_t tok,
+    pt_while_t( llb_token_t tok,
                 shared_pt_node_t expr )
         : token_( tok )
         , expr_( expr )
@@ -450,7 +454,7 @@ public:
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return token_.pos_;
     }
 
@@ -465,16 +469,16 @@ public:
     HAS_RTTI("pt_call_t");
     VISITABLE();
 
-    token_t name_;
+    llb_token_t name_;
     std::vector<shared_pt_node_t> arg_;
 
-    pt_call_t( token_t name )
+    pt_call_t( llb_token_t name )
         : name_( name )
         , arg_()
     {
     };
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return name_.pos_;
     }
 
@@ -495,12 +499,12 @@ public:
     HAS_RTTI("pt_if_t");
     VISITABLE();
 
-    token_t token_;
+    llb_token_t token_;
     shared_pt_node_t expr_;
     std::vector<shared_pt_node_t> stmt_1_;
     std::vector<shared_pt_node_t> stmt_0_;
 
-    pt_if_t( token_t tok, shared_pt_node_t expr )
+    pt_if_t( llb_token_t tok, shared_pt_node_t expr )
         : token_( tok )
         , expr_( expr )
         , stmt_1_()
@@ -508,7 +512,7 @@ public:
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return token_.pos_;
     }
 
@@ -524,9 +528,9 @@ public:
     HAS_RTTI("pt_break_t");
     VISITABLE();
 
-    token_t token_;
+    llb_token_t token_;
 
-    pt_break_t(token_t tok)
+    pt_break_t(llb_token_t tok)
         : token_(tok)
     {
     }
@@ -562,7 +566,7 @@ public:
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return expr_->get_location();
     }
 
@@ -583,7 +587,7 @@ public:
     {
     }
 
-    virtual location_t get_location() const override {
+    virtual llb_location_t get_location() const override {
         return child_->get_location();
     }
 

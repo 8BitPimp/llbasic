@@ -44,7 +44,7 @@ namespace {
 
     struct pair_t {
         const char * str_;
-        token_type_t type_;
+        llb_token_type_t type_;
     };
 
     pair_t specials[] = {
@@ -104,7 +104,7 @@ namespace {
     };
 } // namespace {}
 
-char lexer_t::next( ) {
+char llb_lexer_t::next( ) {
 
     switch (*stream_) {
     case ('\0'):
@@ -122,7 +122,7 @@ char lexer_t::next( ) {
     }
 }
 
-token_type_t lexer_t::identify_alpha( std::string & str ) {
+llb_token_type_t llb_lexer_t::identify_alpha( std::string & str ) {
 
     // lookup in keyword table
     for ( uint32_t i=0; keywords[i].str_; ++i )
@@ -133,7 +133,7 @@ token_type_t lexer_t::identify_alpha( std::string & str ) {
     return tok_identifier;
 }
 
-void lexer_t::skip_whitespace() {
+void llb_lexer_t::skip_whitespace() {
 
     while (! at_eof()) {
         switch (peek()) {
@@ -149,7 +149,7 @@ void lexer_t::skip_whitespace() {
     }
 }
 
-void lexer_t::eat_alpha( ) {
+void llb_lexer_t::eat_alpha( ) {
 
     assert (is_alpha(peek()));
 
@@ -170,7 +170,7 @@ void lexer_t::eat_alpha( ) {
     std::string str( start, end );
     assert( str.size() > 0 );
 
-    token_t token = new_token( identify_alpha( str ) );
+    llb_token_t token = new_token( identify_alpha( str ) );
     switch (token.type_) {
     case ( tok_lit_string ):
     case (tok_identifier) :
@@ -179,7 +179,7 @@ void lexer_t::eat_alpha( ) {
     push_token(token);
 }
 
-void lexer_t::eat_number( ) {
+void llb_lexer_t::eat_number( ) {
 
     assert( is_number( peek(), 10 ));
 
@@ -222,19 +222,19 @@ void lexer_t::eat_number( ) {
 
     if (div == 0) {
 
-        token_t tok = new_token(tok_lit_integer);
+        llb_token_t tok = new_token(tok_lit_integer);
         tok.set_int( num );
         push_token(tok);
     }
     else {
 
-        token_t tok = new_token(tok_lit_float);
+        llb_token_t tok = new_token(tok_lit_float);
         tok.set_float( float(double(num) / double(div)) );
         push_token(tok);
     }
 }
 
-void lexer_t::eat_string( ) {
+void llb_lexer_t::eat_string( ) {
 
     assert(next() == '\"');
 
@@ -253,12 +253,12 @@ void lexer_t::eat_string( ) {
     if (start == end)
         fail("error parsing string literal");
 
-    token_t tok = new_token(tok_lit_string);
+    llb_token_t tok = new_token(tok_lit_string);
     tok.set_string( std::string(start, end) );
     push_token(tok);
 }
 
-bool lexer_t::found( const char * str ) {
+bool llb_lexer_t::found( const char * str ) {
 
     int32_t i=0;
     for (i=0; str[i]!='\0'; ++i)
@@ -269,7 +269,7 @@ bool lexer_t::found( const char * str ) {
     return true;
 }
 
-bool lexer_t::eat_special( ) {
+bool llb_lexer_t::eat_special( ) {
 
     for (uint32_t i=0; specials[i].str_; ++i ) {
 
@@ -282,13 +282,13 @@ bool lexer_t::eat_special( ) {
     return false;
 }
 
-void lexer_t::eat_comment() {
+void llb_lexer_t::eat_comment() {
     while (!at_eof())
         if (next() == '\n')
             break;
 }
 
-bool lexer_t::run(llb_fail_t & error) {
+bool llb_lexer_t::run(llb_fail_t & error) {
 
     if (module_) {
         module_->line_begin_.clear();
@@ -347,9 +347,9 @@ bool lexer_t::run(llb_fail_t & error) {
     return true;
 }
 
-token_t lexer_t::new_token(token_type_t type) {
+llb_token_t llb_lexer_t::new_token(llb_token_type_t type) {
 
-    token_t tok(type);
+    llb_token_t tok(type);
     tok.pos_.set(line_, column_, module_);
 
     if (module_) {
@@ -364,7 +364,7 @@ token_t lexer_t::new_token(token_type_t type) {
     return tok;
 };
 
-lexer_t::lexer_t(shared_module_t module)
+llb_lexer_t::llb_lexer_t(shared_llb_module_t module)
     : module_(module)
     , line_(0)
     , column_(0)
@@ -374,7 +374,7 @@ lexer_t::lexer_t(shared_module_t module)
     stream_ = module->source_;
 }
 
-void lexer_t::push_token(const token_t & token) {
+void llb_lexer_t::push_token(const llb_token_t & token) {
 
     assert(module_);
     module_->tokens_->push(token);

@@ -7,16 +7,16 @@
 #include "llb_pass.h"
 #include "llb_pt_walker.h"
 
-class pt_pass_printer_t
-        : public pt_pass_t
-        , public pt_walker_t {
+class llb_pass_printer_t
+        : public llb_pass_t
+        , public llb_pt_walker_t {
 protected:
     void indent();
     std::string path_;
     llb_stream_t stream_;
 
 public:
-    pt_pass_printer_t(std::string path);
+    llb_pass_printer_t();
 
     virtual bool run(llb_context_t & modules, llb_fail_t & fail);
 
@@ -40,4 +40,16 @@ public:
     virtual void visit(pt_continue_t & n);
     virtual void visit(pt_call_t & n);
     virtual void visit(pt_stmt_t & n);
+};
+
+struct llb_creator_pass_printer_t
+    : public llb_pass_creator_t {
+
+    virtual llb_pass_type_t get_type() const override {
+        return llb_pass_type_t::e_pass_printer;
+    }
+
+    virtual void create(std::unique_ptr<llb_pass_t> & out) const {
+        out.reset(new llb_pass_printer_t());
+    };
 };

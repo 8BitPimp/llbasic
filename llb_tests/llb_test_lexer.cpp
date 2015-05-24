@@ -36,7 +36,7 @@ test_t tests[] = {
         [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             auto & tl = get_token_list(modules, 0);
             try{
-                token_t t = tl.pop(tok_lit_integer);
+                llb_token_t t = tl.pop(tok_lit_integer);
                 if (t.get_int() != 1337)
                     return false;
             }
@@ -57,7 +57,7 @@ test_t tests[] = {
         [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             auto & tl = get_token_list(modules, 0);
             try{
-                token_t t = tl.pop(tok_lit_float);
+                llb_token_t t = tl.pop(tok_lit_float);
                 if (!floats_equal( t.get_float(), 3.14f))
                     return false;
             }
@@ -78,7 +78,7 @@ test_t tests[] = {
         [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             auto & tl = get_token_list(modules, 0);
             try{
-                token_t t = tl.pop(tok_lit_integer);
+                llb_token_t t = tl.pop(tok_lit_integer);
                 if (t.get_int() != 0xcafe12)
                     return false;
             }
@@ -99,7 +99,7 @@ test_t tests[] = {
         [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             auto & tl = get_token_list(modules, 0);
             try{
-                token_t t = tl.pop(tok_lit_integer);
+                llb_token_t t = tl.pop(tok_lit_integer);
                 if (t.get_int() != 5)
                     return false;
             }
@@ -120,7 +120,7 @@ test_t tests[] = {
         [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             auto & tl = get_token_list(modules, 0);
             try{
-                token_t t = tl.pop(tok_lit_string);
+                llb_token_t t = tl.pop(tok_lit_string);
                 if (t.get_string().empty())
                     return false;
                 if (t.get_string() != "hello world")
@@ -143,25 +143,25 @@ test_t tests[] = {
         [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             auto & tl = get_token_list(modules, 0);
             try{
-                token_t t0 = tl.pop(tok_lit_integer);
+                llb_token_t t0 = tl.pop(tok_lit_integer);
                 if (t0.get_int() != 1234) return false;
 
-                token_t t1 = tl.pop(tok_lit_integer);
+                llb_token_t t1 = tl.pop(tok_lit_integer);
                 if (t1.get_int() != 0x1234) return false;
 
-                token_t t2 = tl.pop(tok_lit_integer);
+                llb_token_t t2 = tl.pop(tok_lit_integer);
                 if (t2.get_int() != 7) return false;
 
-                token_t t3 = tl.pop(tok_lit_float);
+                llb_token_t t3 = tl.pop(tok_lit_float);
                 if (!floats_equal(t3.get_float(), 99.12f)) return false;
 
-                token_t t4 = tl.pop(tok_lit_integer);
+                llb_token_t t4 = tl.pop(tok_lit_integer);
                 if (t4.get_int() != 0) return false;
 
-                token_t t5 = tl.pop(tok_lit_float);
+                llb_token_t t5 = tl.pop(tok_lit_float);
                 if (!floats_equal(t5.get_float(), 0.f)) return false;
 
-                token_t t6 = tl.pop(tok_lit_string);
+                llb_token_t t6 = tl.pop(tok_lit_string);
                 if (t6.get_string() != "greets") return false;
             }
             catch (llb_fail_t &) {
@@ -266,19 +266,19 @@ test_t tests[] = {
         [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             auto & tl = get_token_list(modules, 0);
             try {
-                token_t t0 = tl.pop(tok_identifier);
+                llb_token_t t0 = tl.pop(tok_identifier);
                 if (t0.pos_.line_ != 0 || t0.pos_.column_ != 1) return false;
                 tl.pop(tok_eol);
 
-                token_t t1 = tl.pop(tok_identifier);
+                llb_token_t t1 = tl.pop(tok_identifier);
                 if (t1.pos_.line_ != 1 || t1.pos_.column_ != 4) return false;
                 tl.pop(tok_eol);
 
-                token_t t2 = tl.pop(tok_lit_integer);
+                llb_token_t t2 = tl.pop(tok_lit_integer);
                 if (t2.pos_.line_ != 2 || t2.pos_.column_ != 5) return false;
                 tl.pop(tok_eol);
 
-                token_t t3 = tl.pop(tok_lit_string);
+                llb_token_t t3 = tl.pop(tok_lit_string);
                 if (t3.pos_.line_ != 3 || t3.pos_.column_ != 8) return false;
                 tl.pop(tok_eol);
             }

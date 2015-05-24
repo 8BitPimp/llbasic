@@ -4,10 +4,10 @@
 
 #include "llb_forward.h"
 
-class parser_t {
+class llb_parser_t {
 protected:
-    shared_module_t module_;
-    token_list_t & list_;
+    shared_llb_module_t module_;
+    llb_token_list_t & list_;
     pt_t & pt_;
 
     void parse_var_decl();
@@ -37,10 +37,10 @@ protected:
     void parse_module();
 
     void fail(std::string str, const pt_node_t & node);
-    void fail(std::string str, const token_t & tok);
+    void fail(std::string str, const llb_token_t & tok);
 
 public:
-    parser_t(shared_module_t module, pt_t & ast);
+    llb_parser_t(shared_llb_module_t module, pt_t & ast);
 
     bool run(struct llb_fail_t &);
 };

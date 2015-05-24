@@ -6,12 +6,12 @@
 
 namespace {
 
-    const token_type_t type_prefix = tok_chr_colon;
+    const llb_token_type_t type_prefix = tok_chr_colon;
 }
 
-void parser_t::parse_stmt_return() {
+void llb_parser_t::parse_stmt_return() {
 
-    token_t tok = list_.pop(tok_key_return);
+    llb_token_t tok = list_.pop(tok_key_return);
     shared_pt_node_t node;
 
     if (! list_.found( tok_eol ) ) {
@@ -23,18 +23,18 @@ void parser_t::parse_stmt_return() {
     pt_.push( new pt_return_t( tok, node ) );
 }
 
-void parser_t::parse_stmt_continue() {
+void llb_parser_t::parse_stmt_continue() {
     list_.pop(tok_key_continue);
 }
 
-void parser_t::parse_stmt_break() {
+void llb_parser_t::parse_stmt_break() {
 
     list_.pop(tok_key_break);
 }
 
-void parser_t::parse_stmt_while() {
+void llb_parser_t::parse_stmt_while() {
 
-    token_t tok = list_.pop(tok_key_while);
+    llb_token_t tok = list_.pop(tok_key_while);
     list_.pop(tok_chr_paren_l);
     parse_expr();
     list_.pop(tok_chr_paren_r);
@@ -51,15 +51,15 @@ void parser_t::parse_stmt_while() {
     pt_.push( ptr_while.release() );
 }
 
-void parser_t::parse_stmt_for() {
+void llb_parser_t::parse_stmt_for() {
 
     list_.pop(tok_key_for);
     list_.pop(tok_chr_paren_l);
 }
 
-void parser_t::parse_stmt_if() {
+void llb_parser_t::parse_stmt_if() {
 
-    token_t tok = list_.pop(tok_key_if);
+    llb_token_t tok = list_.pop(tok_key_if);
     parse_expr();
 
     std::unique_ptr<pt_if_t> stmt_if( new pt_if_t( tok, pt_.pop() ) );
@@ -78,9 +78,9 @@ void parser_t::parse_stmt_if() {
     }
 }
 
-void parser_t::parse_stmt_call( ) {
+void llb_parser_t::parse_stmt_call( ) {
 
-    token_t name = list_.pop(tok_identifier);
+    llb_token_t name = list_.pop(tok_identifier);
     list_.pop( tok_chr_paren_l );
 
     std::unique_ptr<pt_call_t> call( new pt_call_t( name ) );
@@ -100,7 +100,7 @@ void parser_t::parse_stmt_call( ) {
     pt_.push( call.release() );
 }
 
-void parser_t::parse_stmt() {
+void llb_parser_t::parse_stmt() {
 
     switch (list_.peek(0).type_) {
     case (tok_identifier):
@@ -141,12 +141,12 @@ void parser_t::parse_stmt() {
     }
 }
 
-void parser_t::parse_function_decl() {
+void llb_parser_t::parse_function_decl() {
 
     list_.pop(tok_key_function);
-    token_t name = list_.pop(tok_identifier);
+    llb_token_t name = list_.pop(tok_identifier);
     list_.pop(type_prefix);
-    token_t type = list_.pop(tok_identifier);
+    llb_token_t type = list_.pop(tok_identifier);
     list_.pop(tok_chr_paren_l);
 
     std::unique_ptr<pt_function_decl_t> ptr_func(new pt_function_decl_t(name, type));
@@ -155,9 +155,9 @@ void parser_t::parse_function_decl() {
     if (!list_.found(tok_chr_paren_r)) {
 
         do {
-            token_t name = list_.pop(tok_identifier);
+            llb_token_t name = list_.pop(tok_identifier);
             list_.pop(type_prefix);
-            token_t type = list_.pop();
+            llb_token_t type = list_.pop();
             pt_.push(new pt_decl_var_t(pt_decl_var_t::e_arg, name, type, shared_pt_node_t()));
             ptr_func->add_arg(pt_.pop());
         } while (list_.found(tok_chr_comma));
@@ -169,7 +169,7 @@ void parser_t::parse_function_decl() {
     pt_.push(ptr_func.release());
 }
 
-void parser_t::parse_function() {
+void llb_parser_t::parse_function() {
 
     parse_function_decl();
     shared_pt_node_t decl = pt_.top_specific<pt_function_decl_t>();
@@ -193,7 +193,7 @@ void parser_t::parse_function() {
     decl->upcast<pt_function_decl_t>()->body_ = shared_pt_node_t(ptr_func.release());
 }
 
-void parser_t::parse_var_decl() {
+void llb_parser_t::parse_var_decl() {
 
     pt_decl_var_t::scope_t scope = pt_decl_var_t::e_unknown;
     if (list_.found(tok_key_local))
@@ -202,9 +202,9 @@ void parser_t::parse_var_decl() {
         scope = pt_decl_var_t::e_global;
 
     do {
-        token_t name = list_.pop( tok_identifier );
+        llb_token_t name = list_.pop( tok_identifier );
         list_.pop(type_prefix);
-        token_t type = list_.pop( tok_identifier );
+        llb_token_t type = list_.pop( tok_identifier );
         shared_pt_node_t expr;
 
         if (list_.found(tok_chr_assign)) {
@@ -220,21 +220,21 @@ void parser_t::parse_var_decl() {
     list_.pop(tok_eol);
 }
 
-void parser_t::parse_type() {
+void llb_parser_t::parse_type() {
 
 
 }
 
-void parser_t::parse_field() {
+void llb_parser_t::parse_field() {
 }
 
-void parser_t::parse_external() {
+void llb_parser_t::parse_external() {
 
     list_.pop(tok_key_external);
     parse_function_decl();
 }
 
-void parser_t::parse_module() {
+void llb_parser_t::parse_module() {
 
     std::unique_ptr<pt_module_t> module( new pt_module_t );
     assert( module.get() );
@@ -245,7 +245,7 @@ void parser_t::parse_module() {
 
     while (!list_.at_eof()) {
 
-        token_t &tok = list_.peek(0);
+        llb_token_t &tok = list_.peek(0);
         switch (tok.type_) {
             case (tok_key_global): {
                 uint32_t tide = pt_.index();
@@ -282,18 +282,18 @@ void parser_t::parse_module() {
     pt_.push( module.release() );
 }
 
-void parser_t::fail(std::string str, const pt_node_t & node) {
+void llb_parser_t::fail(std::string str, const pt_node_t & node) {
 
-    location_t pos = node.get_location();
+    llb_location_t pos = node.get_location();
     throw llb_fail_t(str, pos.line_, pos.column_);
 }
 
-void parser_t::fail(std::string str, const token_t & tok) {
+void llb_parser_t::fail(std::string str, const llb_token_t & tok) {
 
-    throw llb_fail_t(str, token_t(tok));
+    throw llb_fail_t(str, llb_token_t(tok));
 }
 
-bool parser_t::run(llb_fail_t & error) {
+bool llb_parser_t::run(llb_fail_t & error) {
 
     try {
         parse_module();
@@ -307,7 +307,7 @@ bool parser_t::run(llb_fail_t & error) {
     return true;
 }
 
-parser_t::parser_t(shared_module_t module, pt_t & ast)
+llb_parser_t::llb_parser_t(shared_llb_module_t module, pt_t & ast)
     : module_(module)
     , list_(*module->tokens_.get())
     , pt_(ast)

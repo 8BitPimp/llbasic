@@ -60,6 +60,8 @@ public:
 
     void println( const std::string & fmt,
                   const std::initializer_list<llb_var_arg_t> & args);
+
+    void println(const std::string & str);
     
     void put_char(const char ch);
 

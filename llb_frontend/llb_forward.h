@@ -2,18 +2,18 @@
 
 #include <memory>
 
-struct token_t;
-class token_list_t;
+struct llb_token_t;
+class llb_token_list_t;
 
-struct pt_pass_t;
-struct pt_pass_manager_t;
+struct llb_pass_t;
+struct llb_pass_manager_t;
 
-struct location_t;
+struct llb_location_t;
 struct llb_fail_t;
 
-struct module_t;
-typedef std::shared_ptr<module_t> shared_module_t;
-typedef std::weak_ptr<module_t> weak_module_t;
+struct llb_module_t;
+typedef std::shared_ptr<llb_module_t> shared_llb_module_t;
+typedef std::weak_ptr<llb_module_t> weak_llb_module_t;
 
 struct llb_context_t;
 
@@ -23,7 +23,7 @@ typedef std::weak_ptr<pt_node_t> weak_pt_node_t;
 
 class pt_t;
 
-class parser_t;
+class llb_parser_t;
 struct expr_info_t;
    
 // module

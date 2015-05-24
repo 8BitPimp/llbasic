@@ -3,7 +3,7 @@
 
 struct map_tok_name_t {
 
-    token_type_t type_;
+    llb_token_type_t type_;
     const char * name_;
 };
 
@@ -73,26 +73,26 @@ map_tok_name_t map_tok_name[tok_count__] = {
 namespace {
 
     template <typename type_t, int size>
-    static
-        uint32_t array_size(type_t(&list)[size]) {
+    static uint32_t array_size(type_t(&list)[size]) {
         return size;
     }
 
 } /* namespace {} */
 
-token_t & token_list_t::pop(token_type_t type) {
+llb_token_t & llb_token_list_t::pop(llb_token_type_t type) {
 
     if (peek(0).type_ != type) {
-        const char * name = token_t::get_type_symbol(type);
+        const char * name = llb_token_t::get_type_symbol(type);
         std::string msg = llb_string_t::format("expected '%0'", { name });
         throw llb_fail_t(msg, peek(0));
     }
     return pop();
 }
 
-const char * token_t::get_type_symbol(token_type_t type) {
+const char * llb_token_t::get_type_symbol(llb_token_type_t type) {
 
-    for (uint32_t i = 0; i < array_size(map_tok_name); ++i)
+    uint32_t size = array_size(map_tok_name);
+    for (uint32_t i = 0; i < size; ++i)
         if (map_tok_name[i].type_ == type)
             return map_tok_name[i].name_;
 
