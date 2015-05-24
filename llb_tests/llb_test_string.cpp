@@ -5,33 +5,36 @@ static
 test_t tests[] = {
 
     {
-        test_t::e_stage_pt,
+        SOURCE_LOC,
+        test_t::e_stage_none,
         test_t::e_expect_pass,
-        "",
-        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) { 
-
+        [](llb_context_t&modules) {
+        },
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             std::string str = llb_string_t::format("%0 world %1", { "hello", 1234 });
             return str == "hello world 1234";
         }
     },
 
     {
-        test_t::e_stage_pt,
+        SOURCE_LOC,
+        test_t::e_stage_none,
         test_t::e_expect_pass,
-        "",
-        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
-
+        [](llb_context_t&modules) {
+        },
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             std::string str = llb_string_t::format("%0 %0", { "jj", 1234 });
             return str == "jj jj";
         }
     },
 
     {
-        test_t::e_stage_pt,
+        SOURCE_LOC,
+        test_t::e_stage_none,
         test_t::e_expect_pass,
-        "",
-        [](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
-
+        [](llb_context_t&modules) {
+        },
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             std::string str = llb_string_t::format("%0", { 0.4f });
             return str == "0.4";
         }

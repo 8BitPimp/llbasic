@@ -17,13 +17,13 @@ public:
         pt_module_t * mod = pt_.top()->upcast<pt_module_t>();
     }
 
-    pt_decl_function_t * get_function(const std::string & name) {
+    pt_function_decl_t * get_function(const std::string & name) {
         pt_module_t * mod = get_module();
         if (!mod)
             return false;
         for (auto & i : mod->functions_) {
 
-            pt_decl_function_t * func = i->upcast<pt_decl_function_t>();
+            pt_function_decl_t * func = i->upcast<pt_function_decl_t>();
             if (!func)
                 continue;
 

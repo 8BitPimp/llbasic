@@ -7,11 +7,11 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "identifier \t\n ident");
         },        
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
-            auto & tl = *modules.list_[0]->tokens_;
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+            auto & tl = get_token_list(modules, 0);
             try{
                 tl.pop(tok_identifier);
                 tl.pop(tok_eol);
@@ -30,11 +30,11 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "1337");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
-            auto & tl = *modules.list_[0]->tokens_;
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+            auto & tl = get_token_list(modules, 0);
             try{
                 token_t t = tl.pop(tok_lit_integer);
                 if (t.get_int() != 1337)
@@ -51,11 +51,11 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "3.14 ");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
-            auto & tl = *modules.list_[0]->tokens_;
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+            auto & tl = get_token_list(modules, 0);
             try{
                 token_t t = tl.pop(tok_lit_float);
                 if (!floats_equal( t.get_float(), 3.14f))
@@ -72,11 +72,11 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "0xcafe12 ");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
-            auto & tl = *modules.list_[0]->tokens_;
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+            auto & tl = get_token_list(modules, 0);
             try{
                 token_t t = tl.pop(tok_lit_integer);
                 if (t.get_int() != 0xcafe12)
@@ -93,11 +93,11 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "0b0101 ");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
-            auto & tl = *modules.list_[0]->tokens_;
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+            auto & tl = get_token_list(modules, 0);
             try{
                 token_t t = tl.pop(tok_lit_integer);
                 if (t.get_int() != 5)
@@ -114,11 +114,11 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "\"hello world\" ");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
-            auto & tl = *modules.list_[0]->tokens_;
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+            auto & tl = get_token_list(modules, 0);
             try{
                 token_t t = tl.pop(tok_lit_string);
                 if (t.get_string().empty())
@@ -137,11 +137,11 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "1234 0x1234 0b111 99.12 0 0.0 \"greets\" ");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
-            auto & tl = *modules.list_[0]->tokens_;
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+            auto & tl = get_token_list(modules, 0);
             try{
                 token_t t0 = tl.pop(tok_lit_integer);
                 if (t0.get_int() != 1234) return false;
@@ -175,10 +175,10 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_lexer_fail,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "0.12.34 ");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             return true;
         }
     },
@@ -187,10 +187,10 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_lexer_fail,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "0x12.34 ");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             return true;
         }
     },
@@ -199,10 +199,10 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_lexer_fail,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "\"multi line\n string\n");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
             return true;
         }
     },
@@ -211,11 +211,11 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "; comment\n token\n");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
-            auto & tl = *modules.list_[0]->tokens_;
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+            auto & tl = get_token_list(modules, 0);
             try {
                 tl.pop(tok_eol);
                 tl.pop(tok_identifier);
@@ -235,11 +235,11 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", " token ; comment\n token\n");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
-            auto & tl = *modules.list_[0]->tokens_;
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+            auto & tl = get_token_list(modules, 0);
             try {
                 tl.pop(tok_identifier);
                 tl.pop(tok_eol);
@@ -260,11 +260,11 @@ test_t tests[] = {
         SOURCE_LOC,
         test_t::e_stage_lexer,
         test_t::e_expect_pass,
-        [](module_list_t&modules) {
+        [](llb_context_t&modules) {
             modules.new_module("test", "a\n  b\n   0\n   \"hi\"");
         },
-        [](module_list_t&modules, pt_t&pt, llb_fail_t&e) {
-            auto & tl = *modules.list_[0]->tokens_;
+        [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+            auto & tl = get_token_list(modules, 0);
             try {
                 token_t t0 = tl.pop(tok_identifier);
                 if (t0.pos_.line_ != 0 || t0.pos_.column_ != 1) return false;

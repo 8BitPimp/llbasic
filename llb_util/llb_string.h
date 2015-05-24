@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <sstream>
 #include <initializer_list>
 
 class llb_var_arg_t {
@@ -55,6 +56,8 @@ public:
     void print( const std::string & fmt,
                 const std::initializer_list<llb_var_arg_t> & args );
 
+    void print( const std::string & str );
+
     void println( const std::string & fmt,
                   const std::initializer_list<llb_var_arg_t> & args);
     
@@ -68,9 +71,10 @@ public:
 
     const char * to_cstring() const;
 
+    void fill(const char ch, uint32_t count);
+
 protected:
-
-
+    std::stringstream stream_;
 };
 
 class llb_string_t {

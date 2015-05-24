@@ -25,6 +25,7 @@ enum token_type_t {
 
     tok_key_type,
     tok_key_function,
+    tok_key_external,
     tok_key_end,
 
     tok_key_true,

@@ -84,6 +84,7 @@ namespace {
 
         "type",     tok_key_type,
         "function", tok_key_function,
+        "external", tok_key_external,
         "end",      tok_key_end,
 
         "true",     tok_key_true,

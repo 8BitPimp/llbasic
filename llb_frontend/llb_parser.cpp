@@ -100,41 +100,12 @@ void parser_t::parse_stmt_call( ) {
     pt_.push( call.release() );
 }
 
-#if 0
-void parser_t::parse_stmt_assign() {
-
-    token_t name = list_.pop( tok_identifier );
-    list_.pop( tok_chr_equal );
-    parse_expr();
-    list_.pop( tok_eol );
-
-    shared_pt_node_t expr = pt_.pop( );
-    pt_.push( new pt_assign_t( name, expr ));
-}
-#endif
-
 void parser_t::parse_stmt() {
 
     switch (list_.peek(0).type_) {
     case (tok_identifier):
-
-#if 0
-        switch (list_.peek(1).type_) {
-        case (tok_chr_equal):
-            parse_stmt_assign();
-            break;
-
-        case (tok_chr_paren_l):
-            parse_stmt_call();
-            break;
-
-        default:
-            throw exception_t("unexpected token type");
-    }
-#else
         parse_expr();
         pt_.push( new pt_stmt_t( pt_.pop() ) );
-#endif
         break;
 
     case (tok_key_local):
@@ -170,46 +141,56 @@ void parser_t::parse_stmt() {
     }
 }
 
-void parser_t::parse_function() {
+void parser_t::parse_function_decl() {
 
-    list_.pop( tok_key_function );
-    token_t name = list_.pop( tok_identifier );
-    list_.pop( type_prefix );
+    list_.pop(tok_key_function);
+    token_t name = list_.pop(tok_identifier);
+    list_.pop(type_prefix);
     token_t type = list_.pop(tok_identifier);
-    list_.pop( tok_chr_paren_l );
+    list_.pop(tok_chr_paren_l);
 
-    std::unique_ptr<pt_decl_function_t> ptr_func( new pt_decl_function_t( name, type ) );
-    assert( ptr_func.get() );
+    std::unique_ptr<pt_function_decl_t> ptr_func(new pt_function_decl_t(name, type));
+    assert(ptr_func.get());
 
-    if (! list_.found( tok_chr_paren_r )) {
+    if (!list_.found(tok_chr_paren_r)) {
 
         do {
-            token_t name = list_.pop( tok_identifier );
-            list_.pop( type_prefix );
+            token_t name = list_.pop(tok_identifier);
+            list_.pop(type_prefix);
             token_t type = list_.pop();
-            pt_.push( new pt_decl_var_t( pt_decl_var_t::e_arg, name, type, shared_pt_node_t() ) );
-            ptr_func->add_arg( pt_.pop() );
-        }
-        while ( list_.found( tok_chr_comma ));
+            pt_.push(new pt_decl_var_t(pt_decl_var_t::e_arg, name, type, shared_pt_node_t()));
+            ptr_func->add_arg(pt_.pop());
+        } while (list_.found(tok_chr_comma));
 
         list_.pop(tok_chr_paren_r);
     }
-    list_.pop( tok_eol );
+    list_.pop(tok_eol);
 
+    pt_.push(ptr_func.release());
+}
+
+void parser_t::parse_function() {
+
+    parse_function_decl();
+    shared_pt_node_t decl = pt_.top_specific<pt_function_decl_t>();
+
+    std::unique_ptr<pt_function_body_t> ptr_func(new pt_function_body_t(decl));
+    assert(ptr_func.get());
+
+    uint32_t floor = pt_.index();
     while (! list_.found(tok_key_end)) {
 
         if (list_.found(tok_eol))
             continue;
 
-        uint32_t index = pt_.index();
         parse_stmt();
-        assert(pt_.index() > index); // we have something
-        while (pt_.index() > index)
+        assert(pt_.index() > floor); // we must have something
+        while (pt_.index() > floor)
             ptr_func->add_stmt(pt_.pop());
     }
     list_.pop(tok_eol );
 
-    pt_.push(ptr_func.release());
+    decl->upcast<pt_function_decl_t>()->body_ = shared_pt_node_t(ptr_func.release());
 }
 
 void parser_t::parse_var_decl() {
@@ -239,10 +220,26 @@ void parser_t::parse_var_decl() {
     list_.pop(tok_eol);
 }
 
+void parser_t::parse_type() {
+
+
+}
+
+void parser_t::parse_field() {
+}
+
+void parser_t::parse_external() {
+
+    list_.pop(tok_key_external);
+    parse_function_decl();
+}
+
 void parser_t::parse_module() {
 
     std::unique_ptr<pt_module_t> module( new pt_module_t );
     assert( module.get() );
+
+    module->name_ = module_->name_;
 
     uint32_t ix = pt_.index();
 
@@ -254,13 +251,22 @@ void parser_t::parse_module() {
                 uint32_t tide = pt_.index();
                 parse_var_decl();
                 while (pt_.index() > tide)
-                    module->add_global(pt_.pop());
+                    module->add_global(pt_.pop_specific<pt_decl_var_t>());
                 }
                 break;
 
-            case (tok_key_function):
+            case (tok_key_external):
+                parse_external();
+                module->add_function(pt_.pop_specific<pt_function_decl_t>());
+                break;
+
+            case (tok_key_type):
+                parse_type();
+                break;
+
+            case (tok_key_function) :
                 parse_function();
-                module->add_function(pt_.pop());
+                module->add_function(pt_.pop_specific<pt_function_decl_t>());
                 break;
 
             case (tok_eol):

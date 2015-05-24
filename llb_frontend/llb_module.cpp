@@ -13,7 +13,8 @@ module_t::module_t(
     assert(tokens_ != nullptr);
 }
 
-shared_module_t module_list_t::new_module(
+shared_module_t 
+llb_context_t::new_module(
     const std::string & name,
     const char * source) {
 
@@ -23,7 +24,17 @@ shared_module_t module_list_t::new_module(
     return module;
 }
 
-shared_module_t module_list_t::find_module(
+shared_module_t 
+llb_context_t::new_module(
+    const std::string & name,
+    std::shared_ptr<uint8_t> source) {
+
+    sources_.push_back(source);
+    return new_module(name, (const char *)source.get());
+}
+
+shared_module_t 
+llb_context_t::find_module(
     const std::string & name) {
 
     for (auto & x : list_)
@@ -32,7 +43,8 @@ shared_module_t module_list_t::find_module(
     return shared_module_t();
 }
 
-std::string module_t::get_line(uint32_t line) {
+std::string 
+module_t::get_line(uint32_t line) {
     
     assert(line < line_begin_.size());
 

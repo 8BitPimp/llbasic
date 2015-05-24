@@ -52,3 +52,41 @@ std::string llb_string_t::format(
 
     return stream.str();
 }
+
+void llb_stream_t::print(const std::string & str) {
+    stream_ << str;
+}
+
+void llb_stream_t::print(const std::string & fmt, const std::initializer_list<llb_var_arg_t> & args) {
+    stream_ << llb_string_t::format(fmt, args);
+}
+
+void llb_stream_t::println(const std::string & fmt, const std::initializer_list<llb_var_arg_t> & args) {
+    stream_ << llb_string_t::format(fmt, args) << std::endl;
+}
+
+void llb_stream_t::put_char(const char ch) {
+    stream_.put(ch);
+}
+
+void llb_stream_t::new_line() {
+    stream_ << std::endl;
+}
+
+void llb_stream_t::clear() {
+    stream_.clear();
+}
+
+std::string llb_stream_t::to_string() const {
+    return stream_.str();
+}
+
+const char * llb_stream_t::to_cstring() const {
+    return stream_.str().c_str();
+}
+
+void llb_stream_t::fill(const char ch, uint32_t count) {
+    for (uint32_t i = 0; i < count; i++) {
+        stream_.put(count);
+    }
+}

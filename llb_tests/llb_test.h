@@ -9,6 +9,9 @@
 #include "llb_pt.h"
 #include "llb_parser.h"
 
+#define STRINGIFY(x) #x
+#define SOURCE_LOC (__FILE__ ":" STRINGIFY(__LINE__))
+
 struct test_t {
     
     const char * source_loc_;
@@ -29,8 +32,8 @@ struct test_t {
     }
     expect_;
 
-    std::function<void(module_list_t & modules_)> init_;
-    std::function<bool(module_list_t&, pt_t&, llb_fail_t&)> validate_;
+    std::function<void(llb_context_t & modules_)> init_;
+    std::function<bool(llb_context_t&, pt_t&, llb_fail_t&)> validate_;
 
     const char * category_;
     uint32_t index_;
@@ -51,18 +54,34 @@ struct test_list_t {
     std::vector<test_t*> list_;
 };
 
-template <typename type_t, int size>
-static
-uint32_t array_size(type_t(&list)[size]) {
-    return size;
-}
+namespace {
 
-static
-bool floats_equal(float in, float cmp) {
-    const float epsilon = .0001f;
-    const float dif = (in<cmp) ? cmp-in : in-cmp;
-    return dif < epsilon;
-}
+    template <typename type_t, int size>
+    static
+        uint32_t array_size(type_t(&list)[size]) {
+        return size;
+    }
 
-#define STRINGIFY(x) #x
-#define SOURCE_LOC (__FILE__ ":" STRINGIFY(__LINE__))
+    static
+        bool floats_equal(float in, float cmp) {
+        const float epsilon = .0001f;
+        const float dif = (in < cmp) ? cmp - in : in - cmp;
+        return dif < epsilon;
+    }
+    
+    template <typename type_t>
+    type_t * null_check(type_t *arg) {
+        assert(arg != nullptr);
+        return arg;
+    }
+
+    token_list_t & get_token_list(llb_context_t & modules, uint32_t index) {
+
+        auto & list = modules.list_;
+        assert(list.size() > index);
+        auto & module = list[index];
+        assert(module->tokens_.get());
+        return *module->tokens_;
+    }
+
+} // namespace {}

@@ -1,5 +1,6 @@
 // llb_util
 #include "llb_string.h"
+#include "llb_file.h"
 
 // llb_frontend
 #include "llb_fail.h"
@@ -14,29 +15,31 @@
 #include "llb_pass_symbolic_link.h"
 #include "llb_pass_printer.h"
 
-const char module1[] = R"(
+// argument parser
+#include "llb_arg_parser.h"
 
-global x:int = 3 + 4
+struct llb_driver_cxt_t {
 
-function main:int( x:int, y:int )
-    local x:int = 3
-    x = func( l + y ) * 3 + 2.1 * 4
-    return x + 3
-end
+    llb_driver_cxt_t()
+        : args_()
+        , status_(e_ok)
+        , message_()
+        , modules_()
+    {
+    }
 
-global i2:int=3-2, i3:float, i4:float=12*3
+    arg_parser_t args_;
 
-function a:int( )
-    local x:int=3, x:float=5
-end
-)";
+    enum {
+        e_ok,
+        e_failed,
+    }
+    status_;
 
-const char module2[] = R"(
+    std::vector<std::string> message_;
 
-function main:int()
-    return 0
-end
-)";
+    llb_context_t modules_;
+};
 
 void on_fail( const llb_fail_t & fail ) {
 
@@ -71,17 +74,88 @@ void on_fail( const llb_fail_t & fail ) {
     exit(0);
 }
 
-int main( ) {
+bool
+load_modules( llb_driver_cxt_t & cxt ) {
 
+    for (const char * path : cxt.args_.files_) {
+
+        file_buffer_t buffer;
+        if (!buffer.load(path)) {
+            cxt.message_.push_back(
+                llb_string_t::format("unable to load source from '%0'", { path }));
+            return false;
+        }
+
+        shared_module_t module = cxt.modules_.new_module(std::string(path), buffer.data_);
+        if (!module) {
+            cxt.message_.push_back(
+                llb_string_t::format("unable to create new module from '%0'", { path }));
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void print_messages( llb_driver_cxt_t & cxt ) {
+
+    for (auto & x : cxt.message_) {
+        puts(x.c_str());
+    }
+}
+
+void print_usage() {
+    const char usage[] =
+R"(
+    low level basic (llbasic):
+
+    llbasic [switches] [options] source1.llb source2.llb ...
+    switches:
+        --help                  print this help screen
+        --version               print the llbasic executable version
+
+    options:
+        -run-pass  [pass_name]  run a specific pass over the ast
+        -emit-cpp  [path]       compile and emit cpp source
+        -emit-ast  [path]       compile and emit human readable ast
+        -emit-llvm [path]       compile and emit llvm bitcode
+)";
+    puts(usage);
+}
+
+void print_version() {
+    puts("low level basic v0.01");
+    puts("revision: ...");
+    puts("compiled: " __DATE__ );
+#if defined( _MSC_VER )
+    puts("compiler: visual studio");
+#endif
+}
+
+int main( const int argc, const char ** args  ) {
+
+    llb_driver_cxt_t llb_cxt;
+    assert(argc >= 1);
+    if (!llb_cxt.args_.parse(argc-1, args+1)) {
+        // unable to parse arguments
+        print_usage();
+        return -1;
+    }
+
+    if (llb_cxt.args_.find("help") || llb_cxt.args_.is_empty()) {
+        print_usage();
+        return 0;
+    }
+
+    if (! load_modules(llb_cxt) ) {
+        // module loading failed
+        return -1;
+    }
+    
     llb_fail_t fail;
-    pt_t parse_tree;
-
-    module_list_t modules;
-    modules.new_module("module1", module1);
-    modules.new_module("module2", module2);
 
     // loop over all modules
-    for (auto & module : modules.list_) {
+    for (auto & module : llb_cxt.modules_.list_) {
 
         // perform lexical analysis
         lexer_t lexer(module);
@@ -91,7 +165,7 @@ int main( ) {
         }
 
         // construct a parse tree
-        parser_t parser(module, parse_tree);
+        parser_t parser(module, llb_cxt.modules_.pt_);
         if (!parser.run(fail)) {
             on_fail(fail);
             return -2;
@@ -100,22 +174,27 @@ int main( ) {
 
     // run the symbolic linker pass
     pt_pass_symbolic_link_t linker;
-    if (!linker.run(parse_tree, fail)) {
+    if (!linker.run(llb_cxt.modules_, fail)) {
         on_fail(fail);
     }
 
-    // run the ast printer pass
-    pt_pass_printer_t printer;
-    if (!printer.run(parse_tree, fail)) {
-        on_fail(fail);
+    // emit the ast
+    std::string path;
+    if (llb_cxt.args_.find("emit-ast", path)) {
+        // run the ast printer pass
+        pt_pass_printer_t printer(path);
+        if (!printer.run(llb_cxt.modules_, fail)) {
+            on_fail(fail);
+        }
     }
     
-#if 0
-    // run the c++ codegen backend
-    llb_backend_cpp_t backend_cpp;
-    parse_tree.visit( backend_cpp );
-#endif
+    // translate to cpp code
+    if (llb_cxt.args_.find("emit-cpp", path)) {
+        // run the c++ codegen backend
+        llb_backend_cpp_t backend_cpp(path);
+        llb_cxt.modules_.pt_.visit(backend_cpp);
+    }
 
-    getchar();
+    print_messages(llb_cxt);
     return 0;
 }

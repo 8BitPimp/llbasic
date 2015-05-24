@@ -6,55 +6,94 @@ test_t tests[] = {
 
 // basic function
 {
-test_t::e_stage_pt,
-test_t::e_expect_pass,
-R"(
-function name:none()
-end
-)",
-[](llb_fail_t&e, token_list_t&tl, pt_t&pt) {
-        if (!pt.top()->is_a<pt_module_t>())
-            return false;
-        pt_module_t * mod = pt.top()->upcast<pt_module_t>();
-        if (mod == nullptr)
-            return false;
-        if (mod->functions_.size() != 1)
-            return false;
+    SOURCE_LOC,
+    test_t::e_stage_pt,
+    test_t::e_expect_pass,
+    [](llb_context_t&modules) {
+        const char * source = 
+        R"(
+        function name:none()
+        end
+        )";
+        modules.new_module("test", source);
+    },
+    [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
         return true;
     }
 },
 
 // single argument
 {
-test_t::e_stage_pt,
-test_t::e_expect_pass,
-R"(
-function name:int( a1:int )
-end
-)",
-[](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
+    SOURCE_LOC,
+    test_t::e_stage_pt,
+    test_t::e_expect_pass,
+    [](llb_context_t&modules) {
+        const char * source =
+        R"(
+        function name:none( a1:int )
+        end
+        )";
+        modules.new_module("test", source);
+    },
+    [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+        return true;
+    }
 },
 
 // multiple arguments
 {
-test_t::e_stage_pt,
-test_t::e_expect_pass,
-R"(
-function name:int( a1:int, a2:int )
-end
-)",
-[](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
+    SOURCE_LOC,
+    test_t::e_stage_pt,
+    test_t::e_expect_pass,
+    [](llb_context_t&modules) {
+        const char * source =
+        R"(
+        function name:none( a1:int, a2:int )
+        end
+        )";
+        modules.new_module("test", source);
+    },
+    [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+        return true;
+    }
 },
 
 // argument name collision
 {
-test_t::e_stage_pt,
-test_t::e_expect_parse_fail,
-R"(
-function name:string( a1:int, a1:int )
-end
-)",
-[](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
+    SOURCE_LOC,
+    test_t::e_stage_pt,
+    test_t::e_expect_pass,
+    [](llb_context_t&modules) {
+        const char * source =
+        R"(
+        function name:none( a1:int, a1:int )
+        end
+        )";
+        modules.new_module("test", source);
+    },
+    [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+        return true;
+    }
+},
+
+// argument name collision
+{
+    SOURCE_LOC,
+    test_t::e_stage_pt,
+    test_t::e_expect_pass,
+    [](llb_context_t&modules) {
+        const char * source =
+        R"(
+        external function func1:none( a:int, b:int )
+        external function func2:none( c:int )
+        external function func3:none( c:int )
+        )";
+        modules.new_module("test", source);
+    },
+    [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+        
+        return true;
+    }
 },
 
 };

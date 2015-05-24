@@ -5,10 +5,15 @@ static
 test_t tests[] = {
 
 {
+    SOURCE_LOC,
     test_t::e_stage_pt,
     test_t::e_expect_pass,
-    "global x:int",
-    [](llb_fail_t&e, token_list_t&tl, pt_t&pt) { return true; }
+    [](llb_context_t&modules) {
+        modules.new_module("test", "global x:int");
+    },
+    [](llb_context_t&modules, pt_t&pt, llb_fail_t&e) {
+        return true;
+    }
 }
 
 };

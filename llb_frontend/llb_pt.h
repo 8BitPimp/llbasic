@@ -37,13 +37,18 @@ struct pt_type_t {
 class pt_node_visitor_t {
 public:
     virtual void visit( pt_t & pt ) = 0;
+
+    // module
     virtual void visit( pt_module_t & n ) = 0;
-    virtual void visit( pt_literal_t & n ) = 0;
-    virtual void visit( pt_identifier_t & n ) = 0;
-    virtual void visit( pt_decl_function_t & n ) = 0;
-    virtual void visit( pt_decl_var_t & n ) = 0;
-    virtual void visit( pt_op_bin_t & n ) = 0;
-    virtual void visit( pt_op_ury_t & n ) = 0;
+
+    // functions
+    virtual void visit(pt_function_decl_t & n) = 0;
+    virtual void visit(pt_function_body_t & n) = 0;
+
+    // variable
+    virtual void visit(pt_decl_var_t & n) = 0;
+
+    // statment
     virtual void visit( pt_if_t & n ) = 0;
     virtual void visit( pt_while_t & n ) = 0;
     virtual void visit( pt_return_t & n ) = 0;
@@ -52,6 +57,12 @@ public:
     virtual void visit( pt_call_t & n ) = 0;
     virtual void visit( pt_expr_t & n ) = 0;
     virtual void visit( pt_stmt_t & n ) = 0;
+
+    // expression
+    virtual void visit(pt_op_bin_t & n) = 0;
+    virtual void visit(pt_op_ury_t & n) = 0;
+    virtual void visit(pt_literal_t & n) = 0;
+    virtual void visit(pt_identifier_t & n) = 0;
 };
 
 struct pt_node_t {
@@ -118,10 +129,27 @@ public:
         stack_.push_back( shared_pt_node_t( node ) );
     }
 
+    template <typename type_t>
+    shared_pt_node_t pop_specific() {
+        assert(stack_.size() > 0);
+        shared_pt_node_t node = top();
+        assert(node->is_a<type_t>());
+        stack_.pop_back();
+        return node;
+    }
+
     shared_pt_node_t pop() {
         assert( stack_.size() > 0 );
         shared_pt_node_t node = top( );
         stack_.pop_back();
+        return node;
+    }
+
+    template <typename type_t>
+    shared_pt_node_t top_specific() {
+        assert(stack_.size() > 0);
+        shared_pt_node_t node = *stack_.rbegin();
+        assert(node->is_a<type_t>());
         return node;
     }
 
@@ -146,8 +174,9 @@ public:
     HAS_RTTI("pt_module_t");
     VISITABLE();
 
-    pt_module_t( )
-        : functions_()
+    pt_module_t()
+        : name_()
+        , functions_()
         , globals_()
     {
     }
@@ -160,12 +189,117 @@ public:
         globals_.push_back(n);
     }
 
+    std::string name_;
     std::vector<shared_pt_node_t> functions_;
     std::vector<shared_pt_node_t> globals_;
+
+    struct {
+        std::vector<shared_pt_node_t> init_;
+    }
+    ext_;
 
     virtual location_t get_location() const {
         return location_t();
     }
+};
+
+struct pt_function_decl_t
+    : public pt_node_t {
+public:
+    HAS_RTTI("pt_function_decl_t");
+    VISITABLE();
+
+    token_t name_;
+    token_t ret_type_;
+    std::vector<shared_pt_node_t> args_;
+
+    pt_function_decl_t(token_t name, token_t type)
+        : name_(name)
+        , ret_type_(type)
+    {}
+
+    void add_arg(shared_pt_node_t node) {
+        args_.push_back(node);
+    }
+
+    virtual location_t get_location() const override {
+        return name_.pos_;
+    }
+
+    shared_pt_node_t body_;
+};
+
+struct pt_function_body_t
+    : public pt_node_t {
+public:
+    HAS_RTTI("pt_function_body_t");
+    VISITABLE();
+
+    weak_pt_node_t proto_;
+    std::vector<shared_pt_node_t> stmt_;
+
+    pt_function_body_t(shared_pt_node_t proto)
+        : proto_(proto)
+        , stmt_()
+    {
+    }
+
+    virtual location_t get_location() const override {
+        shared_pt_node_t proto = proto_.lock();
+        if (proto.get())
+            return proto->get_location();
+        else
+            return location_t();
+    }
+
+    void add_stmt(shared_pt_node_t node) {
+        stmt_.push_back(node);
+    }
+
+    struct {
+
+        std::vector<weak_pt_node_t> locals_;
+        pt_type_t type_;
+    }
+    ext_;
+};
+
+struct pt_decl_var_t
+    : public pt_node_t {
+public:
+    HAS_RTTI("pt_decl_var_t");
+    VISITABLE();
+
+    enum scope_t {
+        e_unknown,
+        e_global,
+        e_local,
+        e_arg,
+    };
+
+    scope_t scope_;
+    token_t name_, type_;
+    shared_pt_node_t expr_;
+
+    pt_decl_var_t(scope_t scope,
+        token_t name,
+        token_t type,
+        shared_pt_node_t expr)
+        : scope_(e_unknown)
+        , name_(name)
+        , type_(type)
+        , expr_(expr)
+    {
+    }
+
+    virtual location_t get_location() const override {
+        return name_.pos_;
+    }
+
+    struct {
+        pt_type_t type_;
+    }
+    ext_;
 };
 
 struct pt_op_bin_t
@@ -325,46 +459,6 @@ public:
     }
 };
 
-struct pt_decl_function_t
-    : public pt_node_t {
-public:
-    HAS_RTTI("pt_decl_function_t");
-    VISITABLE();
-
-    token_t name_;
-    token_t ret_type_;
-    std::vector<shared_pt_node_t> args_;
-    std::vector<shared_pt_node_t> stmt_;
-
-    pt_decl_function_t( token_t name,
-                        token_t ret_type )
-        : name_( name )
-        , ret_type_( ret_type )
-        , args_( )
-        , stmt_( )
-    {
-    }
-
-    virtual location_t get_location() const override {
-        return name_.pos_;
-    }
-
-    void add_arg( shared_pt_node_t node ) {
-        args_.push_back( node );
-    }
-
-    void add_stmt( shared_pt_node_t node ) {
-        stmt_.push_back( node );
-    }
-
-    struct {
-
-        std::vector<weak_pt_node_t> locals_;
-        pt_type_t type_;
-    }
-    ext_;
-};
-
 struct pt_call_t
     : public pt_node_t {
 public:
@@ -470,49 +564,6 @@ public:
 
     virtual location_t get_location() const override {
         return expr_->get_location();
-    }
-
-    struct {
-        pt_type_t type_;
-    }
-    ext_;
-};
-
-struct pt_decl_var_t
-    : public pt_node_t {
-public:
-    HAS_RTTI("pt_decl_var_t");
-    VISITABLE();
-
-    enum scope_t {
-        e_unknown,
-        e_global,
-        e_local,
-        e_arg,
-    };
-
-    enum kind_t {
-        e_primitive,
-        e_vector,
-    };
-
-    scope_t scope_;
-    token_t name_, type_;
-    shared_pt_node_t expr_;
-
-    pt_decl_var_t( scope_t scope,
-                   token_t name,
-                   token_t type,
-                   shared_pt_node_t expr )
-        : scope_( e_unknown )
-        , name_( name )
-        , type_( type )
-        , expr_( expr )
-    {
-    }
-
-    virtual location_t get_location() const override {
-        return name_.pos_;
     }
 
     struct {

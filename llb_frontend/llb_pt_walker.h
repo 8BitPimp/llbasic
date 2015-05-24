@@ -15,12 +15,12 @@ protected:
         return mod->upcast<pt_module_t>();
     }
 
-    pt_decl_function_t * get_function( ) {
+    pt_function_decl_t * get_function( ) {
         if ( stack_.size() <= 1 )
             return nullptr;
         pt_node_t * func = stack_[1];
         assert( func != nullptr );
-        return func->upcast<pt_decl_function_t>();
+        return func->upcast<pt_function_decl_t>();
     }
 
 protected:
@@ -59,10 +59,17 @@ public:
     }
 #endif
 
-    virtual void visit( pt_decl_function_t & n ) {
+    virtual void visit( pt_function_decl_t & n ) {
         enter( n );
         for (auto & i : n.args_)
             i->accept(*this);
+        if (n.body_)
+            n.body_->accept(*this);
+        leave();
+    }
+
+    virtual void visit(pt_function_body_t & n) {
+        enter(n);
         for (auto & i : n.stmt_)
             i->accept(*this);
         leave();

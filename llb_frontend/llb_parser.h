@@ -3,12 +3,6 @@
 #include <stdint.h>
 
 #include "llb_forward.h"
-// forward
-struct token_t;
-class token_list_t;
-struct expr_info_t;
-struct pt_node_t;
-class pt_t;
 
 class parser_t {
 protected:
@@ -18,9 +12,7 @@ protected:
 
     void parse_var_decl();
     void parse_function();
-#if 0
-    void parse_type();
-#endif
+    void parse_function_decl();
 
     void parse_expr_reduce( expr_info_t &, int32_t prec );
     void parse_expr_lhs( expr_info_t & );
@@ -36,6 +28,8 @@ protected:
     void parse_stmt_break();
     void parse_stmt_continue();
     void parse_stmt_return();
+
+    void parse_external();
 
     void parse_type();
     void parse_field();

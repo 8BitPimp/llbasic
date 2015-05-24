@@ -21,13 +21,13 @@ protected:
 
     void add_function(shared_pt_node_t func) {
 
-        if (!func->is_a<pt_decl_function_t>())
+        if (!func->is_a<pt_function_decl_t>())
             assert(!"expecting function");
         // name of new function
-        token_t iname = func->upcast<pt_decl_function_t>()->name_;
+        token_t iname = func->upcast<pt_function_decl_t>()->name_;
         // check for name collision
         for (auto &i : functions_) {
-            token_t fname = i->upcast<pt_decl_function_t>()->name_;            
+            token_t fname = i->upcast<pt_function_decl_t>()->name_;            
             if (iname.get_string() == fname.get_string())
                 throw llb_fail_t("function redefined", iname);
         }
@@ -55,10 +55,10 @@ protected:
     }
 
 public:
-    virtual bool run(pt_t & pt, llb_fail_t & fail) {
+    virtual bool run(llb_context_t & modules, llb_fail_t & fail) {
 
         try {
-            pt.visit(*this);
+            modules.pt_.visit(*this);
         }
         catch (llb_fail_t & thrown) {
             fail = thrown;
@@ -91,7 +91,7 @@ public:
             i->accept(*this);
     }
 
-    virtual void visit(pt_decl_function_t & n) {
+    virtual void visit(pt_function_decl_t & n) {
         // check args dont collide with globals
         for (auto &i : n.args_) {
         }
