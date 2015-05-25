@@ -56,13 +56,13 @@ void on_fail( const llb_fail_t & fail ) {
         fail.location_.line_,
         fail.location_.column_,
         module_name });
-    printf("%s", msg.c_str());
+    printf("%s\n", msg.c_str());
 
     if (module) {
 
         std::string line = fail.location_.get_line();
         if (!line.empty()) {
-            printf(" . \"%s\"\n", line.c_str());
+            printf(" . '%s'\n", line.c_str());
 
             for (uint32_t i = 0; i <= fail.location_.column_+3; ++i)
                 putchar(' ');

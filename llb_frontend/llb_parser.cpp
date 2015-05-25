@@ -60,7 +60,10 @@ void llb_parser_t::parse_stmt_for() {
 void llb_parser_t::parse_stmt_if() {
 
     llb_token_t tok = list_.pop(tok_key_if);
+    list_.pop(tok_chr_paren_l);
     parse_expr();
+    list_.pop(tok_chr_paren_r);
+    list_.pop(tok_eol);
 
     std::unique_ptr<pt_if_t> stmt_if( new pt_if_t( tok, pt_.pop() ) );
 
@@ -68,6 +71,7 @@ void llb_parser_t::parse_stmt_if() {
     while (! list_.found(tok_key_end)) {
 
         if (list_.found(tok_key_else)) {
+            list_.pop(tok_eol);
             if (! in_true_branch )
                 fail("unexpected else", list_.previous());
             in_true_branch = false;
@@ -76,6 +80,8 @@ void llb_parser_t::parse_stmt_if() {
         parse_stmt();
         stmt_if->add_stmt( pt_.pop(), in_true_branch );
     }
+
+    pt_.push(stmt_if.release());
 }
 
 void llb_parser_t::parse_stmt_call( ) {
@@ -102,43 +108,56 @@ void llb_parser_t::parse_stmt_call( ) {
 
 void llb_parser_t::parse_stmt() {
 
-    switch (list_.peek(0).type_) {
-    case (tok_identifier):
-        parse_expr();
-        pt_.push( new pt_stmt_t( pt_.pop() ) );
-        break;
+    bool repeat = false;
+    do
+    {
+        repeat = false;
 
-    case (tok_key_local):
-        parse_var_decl();
-        break;
+        switch (list_.peek(0).type_) {
+        case (tok_identifier) :
+            parse_expr();
+            pt_.push(new pt_stmt_t(pt_.pop()));
+            list_.pop(tok_eol);
+            break;
 
-    case (tok_key_if):
-        parse_stmt_if();
-        break;
+        case (tok_key_local) :
+            parse_var_decl();
+            break;
 
-    case (tok_key_while):
-        parse_stmt_while();
-        break;
+        case (tok_key_if) :
+            parse_stmt_if();
+            break;
 
-    case (tok_key_break):
-        parse_stmt_break();
-        break;
+        case (tok_key_while) :
+            parse_stmt_while();
+            break;
 
-    case (tok_key_continue):
-        parse_stmt_continue();
-        break;
+        case (tok_key_break) :
+            parse_stmt_break();
+            break;
 
-    case (tok_key_return):
-        parse_stmt_return();
-        break;
+        case (tok_key_continue) :
+            parse_stmt_continue();
+            break;
 
-    case (tok_key_for):
-        parse_stmt_for();
-        break;
+        case (tok_key_return) :
+            parse_stmt_return();
+            break;
 
-    default:
-        fail("unexpected token type", list_.peek(0));
-    }
+        case (tok_key_for) :
+            parse_stmt_for();
+            break;
+
+        case (tok_eol) :
+            list_.pop(tok_eol);
+            repeat = true;
+            break;
+
+        default:
+            fail("unexpected token type", list_.peek(0));
+        }
+
+    } while (repeat);
 }
 
 void llb_parser_t::parse_function_decl() {

@@ -123,38 +123,35 @@ void llb_backend_cpp_t::emit_globals(pt_module_t & module) {
     out_.new_line();
 }
 
-void llb_backend_cpp_t::emit_body(pt_function_body_t & body) {
-
-    indent_ += 1;
+void llb_backend_cpp_t::emit_locals(pt_function_body_t & body) {
 
     for (auto & local : body.ext_.locals_) {
-        
+
         pt_decl_var_t * var = local->upcast<pt_decl_var_t>();
         assert(var != nullptr);
 
-        out_.fill(' ', indent_ * 2);
-        out_.print("%0 %1;", { var->type_.get_string(), var->name_.get_string() } );
+        indent(0);
+        out_.print("%0 %1;", { var->type_.get_string(), var->name_.get_string() });
         out_.new_line();
     }
+}
+
+void llb_backend_cpp_t::emit_body(pt_function_body_t & body) {
+
+    indent_ += 1;
+    emit_locals(body);
 
     for (auto & node : body.stmt_) {
-        out_.fill(' ', indent_*2);
         node->accept(*this);
-        out_.new_line();
     }
     indent_ -= 1;
 }
 
 void llb_backend_cpp_t::visit(pt_stmt_t & stmt) {
+
+    indent(0);
     llb_pt_walker_t::visit(stmt);
-    out_.put_char(';');
-}
-
-void llb_backend_cpp_t::emit_locals(pt_function_body_t & body) {
-
-    for (auto & local : body.ext_.locals_) {
-        
-    }
+    out_.println(";");
 }
 
 void llb_backend_cpp_t::emit_impls(pt_module_t & module) {
@@ -177,7 +174,6 @@ void llb_backend_cpp_t::emit_impls(pt_module_t & module) {
         out_.print(" {");
         out_.new_line();
 
-        emit_locals(*body);
         emit_body(*body);
 
         out_.print("}");
@@ -225,9 +221,43 @@ void llb_backend_cpp_t::visit(pt_literal_t & n) {
 
 void llb_backend_cpp_t::visit(pt_return_t & n) {
 
+    indent(0);
     out_.print("return ");
     if (n.expr_.get()) {
         n.expr_->accept(*this);
     }
-    out_.print(";");
+    out_.println(";");
+}
+
+void llb_backend_cpp_t::visit(pt_if_t & stmt) {
+
+    indent(0);
+    out_.print("if ");
+    stmt.expr_->accept(*this);
+    out_.print(" {");
+    indent_ += 1;
+    out_.new_line();
+
+    for (auto & br1 : stmt.stmt_1_) {
+        br1->accept(*this);
+    }
+
+    if (!stmt.stmt_0_.empty()) {
+
+        indent(-1);
+        out_.println("} else {");
+
+        for (auto & br0 : stmt.stmt_0_) {
+            br0->accept(*this);
+        }
+    }
+
+    indent_ -= 1;
+    indent(0);
+    out_.println("}");
+}
+
+void llb_backend_cpp_t::indent(int shift) {
+
+    out_.fill(' ', (indent_ + shift) * 4);
 }

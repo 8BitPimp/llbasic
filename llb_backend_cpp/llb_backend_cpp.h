@@ -17,6 +17,8 @@ protected:
     llb_context_t * cxt_;
     uint32_t indent_;
 
+    void indent(int shift);
+
     void emit_header();
 
     void emit_decl (pt_function_decl_t & func);
@@ -37,6 +39,7 @@ protected:
     void visit(pt_identifier_t & n);
     void visit(pt_literal_t & n);
 
+    void visit(pt_if_t & stmt);
     void visit(pt_stmt_t & stmt);
     void visit(pt_return_t & n);
 

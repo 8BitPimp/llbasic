@@ -55,6 +55,7 @@ llb_module_t::get_line(uint32_t line) {
     while (true) {
         if (end[0] == '\0') break;
         if (end[0] == '\n') break;
+        if (end[0] == '\r') break;
         end++;
     }
 
